@@ -146,14 +146,17 @@ async function popupWA() {
   function conversacion(c) {
     const v = abrirModal(c.nombre || c.tel);
     const caja = el('div', 'wa-conv');
-    if (!c.msgs.length) caja.append(vacio('La PC todavía no cargó esta conversación. Último mensaje: ' + c.ultimo));
-    c.msgs.forEach(function (x) { const b = el('div', 'wa-burbuja ' + (x.d === 'out' ? 'sale' : 'entra')); b.append(document.createTextNode(x.t), el('span', 'wa-h', x.h || '')); caja.append(b); });
+    const msgs = c.msgs.length ? c.msgs : (c.ultimo ? [{ d: 'in', t: c.ultimo, h: c.hora, e: '' }] : []);
+    if (!msgs.length) caja.append(vacio('Todavía no hay mensajes registrados.'));
+    msgs.forEach(function (x) { const b = el('div', 'wa-burbuja ' + (x.d === 'out' ? 'sale' : 'entra')); b.append(document.createTextNode(x.t), el('span', 'wa-h', (x.h || '') + (x.d === 'out' ? (x.e === 'En cola' ? ' ⏳ en cola' : ' ✓✓') : ''))); caja.append(b); });
+    caja.append(el('p', 'suave', 'Se muestra lo último registrado. Se completa cuando la PC actualiza los chats.'));
     v.cuerpo.append(caja);
     const tel = waNumero(c.tel);
     if (tel) v.cuerpo.append(enlace('💬 Abrir en WhatsApp', 'https://wa.me/' + tel, 'btn wa'));
     const txt = campo('Qué mensaje mandaste (para avisar a VENTAS)', 'area');
     v.cuerpo.append(txt, boton('📤 Avisar a VENTAS: ya mandé este mensaje', async function () {
       if (!txt.value.trim()) { aviso('Escribí el mensaje'); return; }
+      await api('waRegistrar', { items: [{ nombre: c.nombre, tel: c.tel, texto: txt.value.trim() }], estado: 'Enviado' });
       await api('pedido', { chat: 'VENTAS REDCONAR', tipo: 'SEGUIMIENTO', prioridad: 'media', contacto: c.nombre || c.tel, telefono: c.tel || '', email: '', clientifyId: '', detalle: 'Mandé por WhatsApp a ' + (c.nombre || c.tel) + ': ' + txt.value + '\nRegistrar la gestión y definir próximo paso.' });
       invalidarInicio(); aviso('Pedido dejado a VENTAS'); v.cerrar();
     }, 'sec'));
@@ -183,10 +186,11 @@ async function popupWA() {
         await api('pedido', { chat: 'VENTAS REDCONAR', tipo: 'SEGUIMIENTO', prioridad: 'alta', contacto: 'ENVIO MULTIPLE ' + dest.length, telefono: '', email: '', clientifyId: '',
           detalle: 'ENVIO MULTIPLE POR WHATSAPP WEB (PC). Mandar a cada destinatario SU texto (ya con variables resueltas). Si hay archivo, adjuntarlo antes del texto: ' + (arch.value.trim() || 'sin archivo') + '. Link incluido: ' + (link.value.trim() || 'sin link') + '. Un envío por contacto, pausa entre envíos, y registrar cada uno en Log_Actividades. Si algo no coincide, no enviar y avisar.\n' +
             dest.map(function (c, i) { return (i + 1) + ') ' + (c.nombre || '') + ' | ' + c.tel + ' | ' + textos[i].replace(/\n/g, ' // '); }).join('\n') });
-        invalidarInicio(); aviso('Pedido de envío múltiple dejado a VENTAS'); v.cerrar(); m.cerrar();
+        await api('waRegistrar', { items: dest.map(function (c, i) { return { nombre: c.nombre, tel: c.tel, texto: textos[i] }; }), estado: 'En cola' });
+        invalidarInicio(); aviso('Pedido dejado a VENTAS. Ya figura como enviado en cada chat'); v.cerrar(); m.cerrar(); popupWA();
       }));
   }
 
-  m.cuerpo.append(info, boton('🔄 Pedir actualización de chats', async function () { const x = await api('repasoWA'); invalidarInicio(); aviso('Pedido dejado a VENTAS (' + x.pedidoEn + ')'); }, 'sec'), bModo, buscar, zona, barra);
+  m.cuerpo.append(info, boton('🔄 Actualizar lo último', function () { m.cerrar(); popupWA(); }), boton('📥 Pedir a la PC que lea WhatsApp', async function () { const x = await api('repasoWA'); invalidarInicio(); aviso('Pedido dejado a VENTAS (' + x.pedidoEn + ')'); }, 'sec'), bModo, buscar, zona, barra);
   pintar();
 }

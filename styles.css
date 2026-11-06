@@ -31,3 +31,11 @@ nav button { flex: 0 0 auto; min-height: 64px; padding: 0 16px; border: 0; backg
 nav button.activo { color: var(--marca); font-weight: 700; border-top: 3px solid var(--marca); }
 .gbtn { margin: 16px 0; }
 .aviso { position: fixed; left: 16px; right: 16px; bottom: 84px; padding: 12px; border-radius: 10px; background: var(--texto); color: var(--fondo); text-align: center; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.num { text-align: center; margin: 0; }
+.num .gran { font-size: 36px; display: block; }
+.num.alerta .gran { color: var(--alerta); }
+.guia { border-color: var(--marca); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.chip { background: var(--caja); border: 1px solid var(--borde); border-radius: 99px; padding: 4px 12px; font-size: 14px; }
+nav button { flex: 1 0 auto; }

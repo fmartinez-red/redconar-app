@@ -1,5 +1,5 @@
 // Guarda solo la app, nunca datos de contactos. Subir VERSION en cada cambio publicado.
-const VERSION = 'redconar-v1';
+const VERSION = 'redconar-v2';
 const ARCHIVOS = ['./', 'index.html', 'styles.css', 'app.js', 'config.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

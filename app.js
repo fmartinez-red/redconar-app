@@ -1,10 +1,17 @@
 const vista = document.getElementById('vista');
 const menu = document.getElementById('menu');
-const CLAVE = 'redconar_codigo';
+const CLAVE = 'redconar_credencial';
 
 function leerCodigo() { try { return localStorage.getItem(CLAVE) || ''; } catch (e) { return ''; } }
 function guardarCodigo(v) { try { localStorage.setItem(CLAVE, v); } catch (e) {} }
 function borrarCodigo() { try { localStorage.removeItem(CLAVE); } catch (e) {} }
+function datosToken(t) {
+  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; }
+}
+function sesionVigente() {
+  const p = datosToken(leerCodigo());
+  return Boolean(p && p.exp * 1000 > Date.now() + 60000);
+}
 
 async function api(accion, datos) {
   const res = await fetch(API_URL, {
@@ -14,7 +21,7 @@ async function api(accion, datos) {
   });
   const r = await res.json();
   if (!r.ok) {
-    if (r.error === 'Codigo incorrecto') { borrarCodigo(); pantallaCodigo(); }
+    if (r.error === 'Sesion invalida') { borrarCodigo(); pantallaCodigo(); }
     throw new Error(r.error);
   }
   return r.datos;
@@ -154,15 +161,19 @@ function armarMenu() {
 function pantallaCodigo() {
   menu.textContent = '';
   vista.textContent = '';
-  vista.append(el('h1', null, 'Redconar'), el('p', 'suave', 'Ingresá tu código. Se guarda en este celular.'));
-  const c = campo('Código', 'password');
-  vista.append(c, boton('Entrar', async () => {
-    guardarCodigo(c.value.trim());
-    await api('resumen', {});
-    armarMenu();
-    irA('Hoy');
-  }));
+  vista.append(el('h1', null, 'Redconar'), el('p', 'suave', 'Entrá con tu cuenta de Google de Redconar.'));
+  const caja = el('div', 'gbtn');
+  vista.append(caja);
+  const iniciar = () => {
+    if (!window.google || !google.accounts) { setTimeout(iniciar, 300); return; }
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: r => { guardarCodigo(r.credential); armarMenu(); irA('Hoy'); }
+    });
+    google.accounts.id.renderButton(caja, { theme: 'filled_blue', size: 'large', text: 'signin_with', width: 280 });
+  };
+  iniciar();
 }
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-if (leerCodigo()) { armarMenu(); irA('Hoy'); } else { pantallaCodigo(); }
+if (sesionVigente()) { armarMenu(); irA('Hoy'); } else { pantallaCodigo(); }

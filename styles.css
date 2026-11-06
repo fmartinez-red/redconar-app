@@ -20,4 +20,5 @@ input, textarea { border: 1px solid var(--borde); background: var(--caja); color
 nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--caja); border-top: 1px solid var(--borde); padding-bottom: env(safe-area-inset-bottom); }
 nav button { flex: 1; min-height: 64px; border: 0; background: none; color: var(--suave); font: inherit; }
 nav button.activo { color: var(--marca); font-weight: 600; }
+.gbtn { margin: 16px 0; }
 .aviso { position: fixed; left: 16px; right: 16px; bottom: 84px; padding: 12px; border-radius: 10px; background: var(--texto); color: var(--fondo); text-align: center; }

@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v11'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v12'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -77,10 +77,10 @@ async function vistaPanel() {
   nov.id = 'g-nov';
   const cn = leerLocal(CLAVE_NOV, null);
   const bm = atajo('✉️', cn ? cn.datos.mailSinLeer + ' mails' : 'Mail', function () { popupNovedad('mail'); });
-  nov.classList.add('cinco');
-  nov.append(atajo('✅', 'Gestionados', popupGestionados), bm, atajo('📆', 'Agenda', function () { popupNovedad('agenda'); }), atajo('📁', 'Drive', function () { popupNovedad('drive'); }), atajo('📱', 'WhatsApp', popupWA));
+  nov.append(bm, atajo('📆', 'Agenda', function () { popupNovedad('agenda'); }), atajo('📁', 'Drive', function () { popupNovedad('drive'); }), atajo('📱', 'WhatsApp', popupWA));
   vista.append(el('p', 'suave', 'Novedades'), nov);
-  datosNovedades(false).then(function (n) { bm.lastChild.textContent = n.mailSinLeer + ' mails'; }).catch(function () { /* sin backend nuevo: queda "Mail" */ });
+  api('mails', Object.assign({}, leerLocal('redconar_mailfiltro', { estado: 'unread', dias: '7', cat: '' }), { soloCuenta: true })).then(function (r) { bm.lastChild.textContent = (r.total >= 500 ? '500+' : r.total) + ' mails'; }).catch(function () { /* sin backend nuevo: queda "Mail" */ });
+  vista.append(bloqueGestionados());
 }
 
 /* ---------- GUÍA (wizard): una por pestaña, sale sola la primera vez ---------- */

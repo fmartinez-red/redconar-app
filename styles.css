@@ -80,3 +80,6 @@ nav button.activo .ico { transform: scale(1.15); }
 .wa-burbuja { max-width: 82%; padding: 7px 10px; border-radius: 10px; font-size: 15px; color: #111; overflow-wrap: anywhere; }
 .wa-burbuja.entra { background: #fff; align-self: flex-start; } .wa-burbuja.sale { background: #d9fdd3; align-self: flex-end; }
 .wa-h { display: block; text-align: right; font-size: 10px; color: #667; margin-top: 2px; }
+
+.fila > .tocable { flex: 1; min-width: 0; }
+.fila .casilla { margin-right: 4px; }

@@ -65,3 +65,18 @@ nav button.activo .ico { transform: scale(1.15); }
 .atajos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 14px; }
 .atajo { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 4px; border: 1px solid var(--borde); border-radius: 16px; background: var(--caja); color: var(--texto); font: inherit; font-size: 12px; font-weight: 600; box-shadow: var(--sombra); }
 .atajo .em { font-size: 26px; }
+
+.atajos.cinco { grid-template-columns: repeat(5, 1fr); }
+.atajos.cinco .atajo { font-size: 10.5px; padding: 10px 2px; }
+.casilla { width: 22px; height: 22px; min-height: 0; margin: 0 10px 0 0; flex: 0 0 auto; accent-color: var(--marca); }
+.barra-sel { position: sticky; bottom: 0; background: var(--fondo); padding: 8px 0; display: none; }
+.wa-fila { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--borde); }
+.wa-avatar { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--g1), var(--g2)); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 19px; flex: 0 0 auto; }
+.wa-texto { flex: 1; min-width: 0; } .wa-texto p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+.wa-der { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 12px; }
+.wa-badge { background: #22c55e; color: #fff; border-radius: 99px; min-width: 22px; padding: 1px 7px; text-align: center; font-weight: 700; }
+.wa-conv { background: #e7ded3; border-radius: 14px; padding: 10px; margin-bottom: 12px; max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+@media (prefers-color-scheme: dark) { .wa-conv { background: #0f1c1a; } }
+.wa-burbuja { max-width: 82%; padding: 7px 10px; border-radius: 10px; font-size: 15px; color: #111; overflow-wrap: anywhere; }
+.wa-burbuja.entra { background: #fff; align-self: flex-start; } .wa-burbuja.sale { background: #d9fdd3; align-self: flex-end; }
+.wa-h { display: block; text-align: right; font-size: 10px; color: #667; margin-top: 2px; }

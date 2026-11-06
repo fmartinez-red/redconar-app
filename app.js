@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v10'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v11'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';

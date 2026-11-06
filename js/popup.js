@@ -136,7 +136,73 @@ async function popupChats() {
   m.cuerpo.lastChild.remove();
   CHATS.forEach(function (c) {
     const n = d && d.chats[c] ? d.chats[c].pendientes.length : 0;
-    m.cuerpo.append(boton(c + (n ? '  ·  ' + n + ' pendientes' : ''), function () { m.cerrar(); irA('CHATS'); abrirChat(c); }));
+    m.cuerpo.append(boton(c + (n ? '  ·  ' + n + ' esperando' : ''), function () { popupChat(c); }));
   });
   m.cuerpo.append(boton('📤 Nuevo pedido', function () { m.cerrar(); popupPedido(); }, 'sec'));
+}
+
+/* ---------- Chats ---------- */
+const INFO_CHATS = {
+  'VENTAS REDCONAR': ['📈', 'Seguimiento de leads y cierre de ventas.'],
+  'PLATAFORMA REDCONAR': ['🧩', 'Altas de clientes, legajos y datos en la plataforma.'],
+  'DATOS REDCONAR': ['🗂', 'Listas, limpieza y armado de la base de contactos.'],
+  'PRESUPUESTOS REDCONAR': ['💰', 'Armado y seguimiento de presupuestos.']
+};
+
+/** Un chat en ventana: qué le pidieron, qué hizo hoy y acciones. */
+async function popupChat(nombre) {
+  const info = INFO_CHATS[nombre] || ['💬', ''];
+  const m = abrirModal(info[0] + ' ' + nombre, el('p', 'suave', 'Cargando...'));
+  let d;
+  try { d = await datosInicio(false); } catch (e) { m.cuerpo.lastChild.textContent = 'No se pudo cargar: ' + e.message; return; }
+  m.cuerpo.lastChild.remove();
+  const c = d.chats[nombre];
+  m.cuerpo.append(el('p', 'suave', info[1]));
+
+  // Abrir el chat (si falta el link, se pega acá mismo)
+  const zonaLink = el('div');
+  const abrirChatClaude = function () {
+    const url = urlDeChat(nombre);
+    if (url) { window.open(url, '_blank', 'noopener'); return; }
+    zonaLink.textContent = '';
+    const caja = el('div', 'card');
+    caja.append(el('p', null, 'Falta el link de este chat. Abrilo en Claude, copiá la dirección de la barra y pegala acá:'));
+    const i = campo('https://claude.ai/chat/...', 'url');
+    caja.append(i, boton('Guardar y abrir', async function () {
+      if (!/^https:\/\/claude\.ai\//.test(i.value.trim())) { aviso('Tiene que empezar con https://claude.ai/'); return; }
+      const u = leerLocal(CLAVE_URLS, {}); u[nombre] = i.value.trim(); guardarLocal(CLAVE_URLS, u);
+      window.open(i.value.trim(), '_blank', 'noopener'); zonaLink.textContent = '';
+    }));
+    zonaLink.append(caja);
+  };
+  m.cuerpo.append(boton('🚀 Abrir este chat en Claude', abrirChatClaude), zonaLink,
+    boton('📤 Nuevo pedido para este chat', function () { m.cerrar(); const p = abrirModal('📤 Pedido para ' + nombre); p.cuerpo.append(formPedido(null, '', nombre, p.cerrar)); }, 'sec'));
+
+  const pend = bloque('⏳ Pedidos esperando (' + c.pendientes.length + ')',
+    c.pendientes.length ? 'Son pedidos que le dejaste (o le dejó otro chat) y todavía no hizo. Para que los resuelva, abrí el chat y escribile "traspasos". Cuando lo haga, se marcan solos; también podés marcarlos vos.' : 'Nada esperando. Este chat está al día. 🎉');
+  c.pendientes.forEach(function (t) {
+    const k = el('article', 'card');
+    k.append(el('strong', null, [t.tipo, t.contacto].filter(Boolean).join(' · ')));
+    k.append(el('p', 'suave', [t.fecha, 'pedido por ' + t.de_chat, t.prioridad && 'prioridad ' + t.prioridad].filter(Boolean).join(' · ')));
+    if (t.detalle) k.append(el('p', null, t.detalle));
+    const r = campo('Qué se hizo (opcional)');
+    k.append(r, boton('✅ Marcar resuelto', async function () {
+      await api('cerrarTraspaso', { id: t.id, resultado: r.value });
+      invalidarInicio(); aviso('Marcado como resuelto'); k.remove();
+    }, 'sec'));
+    pend.append(k);
+  });
+  m.cuerpo.append(pend);
+
+  const det = el('details');
+  det.append(el('summary', null, '📝 Lo que hizo hoy (' + c.hoy.length + ')'));
+  if (!c.hoy.length) det.append(vacio('Todavía no registró nada hoy.'));
+  c.hoy.forEach(function (x) {
+    const k = el('article', 'card');
+    k.append(el('strong', null, x.nombre || x.empresa || 'Sin nombre'));
+    if (x.mensaje) k.append(el('p', null, x.mensaje));
+    if (x.respuesta) k.append(el('p', 'suave', 'Respuesta: ' + x.respuesta));
+    det.append(k);
+  });
+  m.cuerpo.append(det);
 }

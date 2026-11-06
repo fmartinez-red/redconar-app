@@ -278,3 +278,16 @@ async function bloqueAvisos() {
   if (r.ultimo) caja.append(el('p', 'suave', 'Último aviso: ' + r.ultimo));
   return caja;
 }
+
+/* ---------- Tareas diarias automáticas (encender, hora, ejecutar ahora) ---------- */
+async function bloqueTareasDiarias() {
+  const caja = bloque('⏰ Tareas diarias automáticas', 'Rutina que la hoja ejecuta sola una vez por día. Está apagada hasta que la prendas.');
+  let e;
+  try { e = await api('tareasGet'); } catch (x) { caja.append(vacio(/Accion desconocida/.test(x.message) ? FALTA_BACKEND : 'No se pudo cargar: ' + x.message)); return caja; }
+  const hora = lista(Array.from({ length: 24 }, function (_, i) { return [String(i), (i < 10 ? '0' : '') + i + ':00']; }), String(e.hora));
+  caja.append(el('p', null, e.activo ? '🟢 Prendida' : '⚪ Apagada'), el('p', 'suave', 'Hora de ejecución'), hora,
+    boton(e.activo ? '⏸ Apagar' : '▶️ Prender', async function () { await api('tareasSet', { activo: !e.activo, hora: Number(hora.value) }); aviso(e.activo ? 'Apagada' : 'Prendida'); vistaAjustes(); }),
+    boton('💾 Guardar hora', async function () { await api('tareasSet', { activo: e.activo, hora: Number(hora.value) }); aviso('Hora guardada'); }, 'sec'),
+    boton('⚡ Ejecutar ahora', async function () { await api('tareasEjecutar'); aviso('Ejecutada'); }, 'sec'));
+  return caja;
+}

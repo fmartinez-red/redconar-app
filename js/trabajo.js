@@ -10,11 +10,12 @@ function ordenarPor(l, f) { return l.slice().sort(f); }
 /* ---------- MAIL ---------- */
 async function popupMail() {
   const m = abrirModal('✉️ Mail');
-  const S = { estado: 'unread', dias: '7', cat: '', texto: '', inicio: 0 };
+  const G = leerLocal('redconar_mailfiltro', { estado: 'unread', dias: '7', cat: '' });
+  const S = { estado: G.estado, dias: G.dias, cat: G.cat, texto: '', inicio: 0, total: 0 };
   const sel = {};
-  const fEstado = lista([['unread', 'Sin leer'], ['read', 'Leídos'], ['', 'Todos']], 'unread');
-  const fDias = lista([['1', 'Hoy y ayer'], ['3', 'Últimos 3 días'], ['7', 'Última semana'], ['30', 'Último mes'], ['', 'Todas las fechas']], '7');
-  const fCat = lista([['', 'Todas las categorías'], ['principal', 'Principal'], ['social', 'Social'], ['promos', 'Promociones'], ['novedades', 'Novedades'], ['foros', 'Foros']]);
+  const fEstado = lista([['unread', 'Sin leer'], ['read', 'Leídos'], ['', 'Todos']], G.estado);
+  const fDias = lista([['1', 'Hoy y ayer'], ['3', 'Últimos 3 días'], ['7', 'Última semana'], ['30', 'Último mes'], ['', 'Todas las fechas']], G.dias);
+  const fCat = lista([['', 'Todas las categorías'], ['principal', 'Principal'], ['social', 'Social'], ['promos', 'Promociones'], ['novedades', 'Novedades'], ['foros', 'Foros']], G.cat);
   const fTxt = campo('Buscar remitente o asunto', 'search');
   const info = el('p', 'suave');
   const zona = el('div');
@@ -31,10 +32,12 @@ async function popupMail() {
   async function cargar(reset) {
     if (reset) { S.inicio = 0; zona.textContent = ''; }
     S.estado = fEstado.value; S.dias = fDias.value; S.cat = fCat.value; S.texto = fTxt.value.trim();
+    guardarLocal('redconar_mailfiltro', { estado: S.estado, dias: S.dias, cat: S.cat });
     mas.style.display = 'none';
     let r;
     try { r = await api('mails', S); } catch (e) { zona.append(vacio(/Accion desconocida/.test(e.message) ? FALTA_BACKEND : e.message)); return; }
-    info.textContent = r.sinLeer + ' sin leer en total · mostrando ' + (S.inicio + r.items.length);
+    if (r.total !== undefined) S.total = r.total;
+    info.textContent = (S.total >= 500 ? '500+' : S.total) + ' mails con estos filtros · ' + r.sinLeer + ' sin leer en toda la casilla';
     if (!r.items.length && reset) zona.append(vacio('Nada con estos filtros 🎉'));
     r.items.forEach(function (x) {
       const k = el('div', 'fila');
@@ -193,4 +196,68 @@ async function popupWA() {
 
   m.cuerpo.append(info, boton('🔄 Actualizar lo último', function () { m.cerrar(); popupWA(); }), boton('📥 Pedir a la PC que lea WhatsApp', async function () { const x = await api('repasoWA'); invalidarInicio(); aviso('Pedido dejado a VENTAS (' + x.pedidoEn + ')'); }, 'sec'), bModo, buscar, zona, barra);
   pintar();
+}
+
+
+/* ---------- GESTIONADOS: solapa al final del panel, con período ---------- */
+const PERIODOS = [['1', 'Hoy'], ['3', '3 días'], ['7', 'Semana'], ['30', 'Mes'], ['90', '3 meses'], ['x', 'Personalizado']];
+function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+function bloqueGestionados() {
+  const G = leerLocal('redconar_gestper', { per: '1', desde: '', hasta: '' });
+  const caja = el('section', 'card');
+  caja.id = 'g-gest';
+  const cab = el('h2', null, '✅ Gestionados');
+  const per = lista(PERIODOS, G.per);
+  const d1 = campo('', 'date', G.desde), d2 = campo('', 'date', G.hasta);
+  const fechas = el('div', null); fechas.append(el('p', 'suave', 'Desde'), d1, el('p', 'suave', 'Hasta'), d2);
+  fechas.style.display = G.per === 'x' ? 'block' : 'none';
+  const zona = el('div');
+  caja.append(cab, per, fechas, zona);
+  async function cargar() {
+    G.per = per.value; G.desde = d1.value; G.hasta = d2.value; guardarLocal('redconar_gestper', G);
+    fechas.style.display = G.per === 'x' ? 'block' : 'none';
+    let desde, hasta = new Date();
+    if (G.per === 'x') { if (!G.desde || !G.hasta) { zona.textContent = ''; zona.append(vacio('Elegí las dos fechas.')); return; } desde = G.desde; hasta = G.hasta; }
+    else { const a = new Date(); a.setDate(a.getDate() - (Number(G.per) - 1)); desde = isoLocal(a); hasta = isoLocal(hasta); }
+    zona.textContent = ''; zona.append(vacio('Cargando...'));
+    let r;
+    try { r = await api('gestionados', { desde: desde, hasta: hasta }); } catch (e) { zona.textContent = ''; zona.append(vacio(/Accion desconocida/.test(e.message) ? FALTA_BACKEND : e.message)); return; }
+    zona.textContent = '';
+    if (!r.items.length) { zona.append(vacio('Sin contactos gestionados en este período.')); return; }
+    cab.textContent = '✅ Gestionados (' + r.items.length + ')';
+    pintar(r.items);
+  }
+  function pintar(items) {
+    zona.textContent = '';
+    const sel = {};
+    const lis = el('div'), barra = el('div', 'barra-sel');
+    const elegidos = function () { return items.filter(function (x) { return sel[x.fila]; }); };
+    const pintarBarra = function () { barra.style.display = Object.keys(sel).length ? 'block' : 'none'; };
+    function filas() {
+      lis.textContent = '';
+      items.forEach(function (x) {
+        const k = el('div', 'fila'), t = el('div', 'tocable');
+        t.append(el('strong', null, x.nombre || x.empresa || x.telefono), el('p', 'suave', x.fecha + ' · ' + (x.mensaje || '').slice(0, 60)),
+          el('p', x.respuesta ? 'plazo' : 'suave', x.respuesta ? '💬 ' + x.respuesta.slice(0, 70) : '⏳ Sin respuesta registrada'));
+        t.onclick = function () { popupContacto({ telefono: x.telefono, nombre: x.nombre, empresa: x.empresa }); };
+        k.append(casilla(Boolean(sel[x.fila]), function (v) { if (v) sel[x.fila] = 1; else delete sel[x.fila]; pintarBarra(); }), t);
+        lis.append(k);
+      });
+      pintarBarra();
+    }
+    const marcar = function (txt) { return async function () { const f = elegidos(); await api('marcarRespuesta', { filas: f.map(function (x) { return x.fila; }), respuesta: txt }); f.forEach(function (x) { x.respuesta = txt; delete sel[x.fila]; }); aviso('Actualizado'); filas(); }; };
+    barra.append(boton('✅ Respondió', marcar('Respondió (marcado en app)')), boton('⏳ Sin respuesta', marcar('Sin respuesta (marcado en app)'), 'sec'),
+      boton('🔎 Pedir repaso de estos en WhatsApp', async function () {
+        const f = elegidos();
+        await api('pedido', { chat: 'VENTAS REDCONAR', tipo: 'SEGUIMIENTO', prioridad: 'alta', contacto: 'REPASO ' + f.length + ' CONTACTOS', telefono: '', email: '', clientifyId: '',
+          detalle: 'Revisar en WhatsApp Web si respondieron estos contactos (sin capturas, leer con javascript solo estos chats). Registrar respuesta nueva en Log_Actividades:\n' + f.map(function (x) { return '- ' + (x.nombre || x.empresa) + ' | ' + x.telefono; }).join('\n') });
+        invalidarInicio(); aviso('Pedido dejado a VENTAS');
+      }, 'sec'));
+    zona.append(boton('☑ Seleccionar todos', function () { items.forEach(function (x) { sel[x.fila] = 1; }); filas(); }, 'sec'), lis, barra);
+    filas();
+  }
+  [per, d1, d2].forEach(function (x) { x.onchange = cargar; });
+  cargar();
+  return caja;
 }

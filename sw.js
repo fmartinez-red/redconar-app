@@ -1,10 +1,10 @@
 // Service worker: deja la app instalable y abrible sin conexión (solo la app, nunca los datos).
 // Estrategia: primero la red, y si no hay conexión, la copia guardada. Así los cambios llegan solos.
 // Subir VERSION en cada cambio publicado (y VERSION_APP en app.js).
-const VERSION = 'redconar-v5';
+const VERSION = 'redconar-v6';
 const ARCHIVOS = [
   './', 'index.html', 'styles.css', 'config.js', 'manifest.webmanifest', 'plantillas.js', 'app.js',
-  'js/util.js', 'js/api.js', 'js/ficha.js', 'js/buscar.js', 'js/chat.js', 'js/ajustes.js', 'js/tareas.js',
+  'js/util.js', 'js/api.js', 'js/ficha.js', 'js/buscar.js', 'js/chat.js', 'js/ajustes.js', 'js/tareas.js', 'js/popup.js',
   'icons/icon-192.png', 'icons/icon-512.png'
 ];
 

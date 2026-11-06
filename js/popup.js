@@ -206,3 +206,75 @@ async function popupChat(nombre) {
   });
   m.cuerpo.append(det);
 }
+
+/* ---------- Novedades: mail, agenda, drive, WhatsApp ---------- */
+const CLAVE_NOV = 'redconar_novedades';
+async function datosNovedades(forzar) {
+  const c = leerLocal(CLAVE_NOV, null);
+  if (!forzar && c && Date.now() - c.t < 3 * 60 * 1000) return c.datos;
+  const datos = await api('novedades');
+  guardarLocal(CLAVE_NOV, { t: Date.now(), datos: datos });
+  return datos;
+}
+const FALTA_BACKEND = 'Todavía no está activado en la hoja (falta pegar novedades.gs y publicar). Pedímelo y te guío.';
+
+async function popupNovedad(que) {
+  const t = { mail: '✉️ Mail sin leer', agenda: '📆 Agenda de hoy', drive: '📁 Drive reciente' }[que];
+  const m = abrirModal(t, el('p', 'suave', 'Cargando...'));
+  let d;
+  try { d = await datosNovedades(false); } catch (e) { m.cuerpo.lastChild.textContent = /Accion desconocida/.test(e.message) ? FALTA_BACKEND : 'No se pudo cargar: ' + e.message; return; }
+  m.cuerpo.lastChild.remove();
+  const l = que === 'mail' ? d.mails : que === 'agenda' ? d.agenda : d.drive;
+  if (que === 'mail') m.cuerpo.append(el('p', 'suave', d.mailSinLeer + ' sin leer en total. Se muestran los últimos 15.'));
+  if (!l.length) m.cuerpo.append(vacio('Nada por acá 🎉'));
+  l.forEach(function (x) {
+    const k = el('div', 'fila' + (x.url ? ' tocable' : ''));
+    const c = el('div');
+    if (que === 'mail') c.append(el('strong', null, x.asunto || '(sin asunto)'), el('p', 'suave', x.de + ' · ' + x.fecha));
+    else if (que === 'agenda') c.append(el('strong', null, x.hora + ' · ' + x.titulo), el('p', 'suave', x.lugar));
+    else c.append(el('strong', null, x.nombre), el('p', 'suave', x.fecha));
+    k.append(c);
+    if (x.url) { k.append(el('span', 'flecha', '›')); k.onclick = function () { window.open(x.url, '_blank', 'noopener'); }; }
+    m.cuerpo.append(k);
+  });
+  m.cuerpo.append(boton('🔄 Actualizar', async function () { await datosNovedades(true); m.cerrar(); popupNovedad(que); }, 'sec'));
+}
+
+async function popupWA() {
+  const m = abrirModal('📱 WhatsApp');
+  m.cuerpo.append(el('p', null, 'Las conversaciones están en WhatsApp Web de la PC. Con el botón de abajo dejás un pedido a VENTAS REDCONAR para que repase solo las conversaciones activas y registre las novedades (con el mínimo de tokens).'),
+    el('p', 'suave', 'La PC tiene que estar prendida con WhatsApp Web abierto. Después abrí VENTAS REDCONAR en Claude y escribile "traspasos".'));
+  m.cuerpo.append(boton('🔎 Pedir repaso de conversaciones', async function () {
+    const r = await api('repasoWA');
+    invalidarInicio(); aviso('Pedido dejado a VENTAS (' + r.pedidoEn + ')');
+  }), boton('🚀 Abrir VENTAS REDCONAR', function () { popupChat('VENTAS REDCONAR'); }, 'sec'), boton('📋 Plantillas', popupPlantillas, 'sec'));
+  m.cuerpo.append(el('p', 'suave', 'Las novedades que registre aparecen en TAREAS y en "Lo que hizo hoy" del chat.'));
+}
+
+/* ---------- Avisos programados ---------- */
+async function bloqueAvisos() {
+  const caja = bloque('🔔 Avisos al celular', 'Te llegan por la app ntfy aunque esta app esté cerrada. Solo suenan en los días y horarios que elijas.');
+  caja.id = 'g-avisos';
+  let r;
+  try { r = await api('avisosGet'); } catch (e) { caja.append(vacio(/Accion desconocida/.test(e.message) ? FALTA_BACKEND : 'No se pudo cargar: ' + e.message)); return caja; }
+  const c = r.config;
+  const dias = el('div', 'solapas');
+  ['D', 'L', 'M', 'X', 'J', 'V', 'S'].forEach(function (n, i) {
+    const b = el('button', c.dias.indexOf(i) >= 0 ? 'activa' : '', n);
+    b.onclick = function () { const p = c.dias.indexOf(i); if (p >= 0) c.dias.splice(p, 1); else c.dias.push(i); b.classList.toggle('activa'); };
+    dias.append(b);
+  });
+  const d1 = campo('', 'time', c.desde), d2 = campo('', 'time', c.hasta);
+  const tipos = el('div', 'solapas');
+  [['mail', '✉️ Mail'], ['agenda', '📆 Agenda'], ['drive', '📁 Drive'], ['chats', '💬 Chats']].forEach(function (x) {
+    const b = el('button', c[x[0]] ? 'activa' : '', x[1]);
+    b.onclick = function () { c[x[0]] = !c[x[0]]; b.classList.toggle('activa'); };
+    tipos.append(b);
+  });
+  caja.append(el('p', 'suave', 'Días'), dias, el('p', 'suave', 'Desde'), d1, el('p', 'suave', 'Hasta'), d2, el('p', 'suave', 'Qué avisar'), tipos,
+    boton('Guardar avisos', async function () { c.desde = d1.value || '09:00'; c.hasta = d2.value || '19:00'; await api('avisosSet', c); aviso('Avisos guardados'); }));
+  caja.append(el('p', 'suave', 'Una sola vez: instalá la app "ntfy" (gratis), tocá + y suscribite al tema:'), el('p', null, r.topic));
+  caja.append(boton('📋 Copiar tema', async function () { await navigator.clipboard.writeText(r.topic); aviso('Copiado'); }, 'sec'));
+  if (r.ultimo) caja.append(el('p', 'suave', 'Último aviso: ' + r.ultimo));
+  return caja;
+}

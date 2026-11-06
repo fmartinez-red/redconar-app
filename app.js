@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v7'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v8'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -73,6 +73,13 @@ async function vistaPanel() {
   const pend = CHATS.reduce(function (s, c) { return s + ((d.chats[c] || { pendientes: [] }).pendientes.length); }, 0);
   grid.append(tarjetaNum(pend, '💬', 'Pedidos en chats', popupChats));
   vista.append(grid);
+  const nov = el('div', 'atajos');
+  nov.id = 'g-nov';
+  const cn = leerLocal(CLAVE_NOV, null);
+  const bm = atajo('✉️', cn ? cn.datos.mailSinLeer + ' mails' : 'Mail', function () { popupNovedad('mail'); });
+  nov.append(bm, atajo('📆', 'Agenda', function () { popupNovedad('agenda'); }), atajo('📁', 'Drive', function () { popupNovedad('drive'); }), atajo('📱', 'WhatsApp', popupWA));
+  vista.append(el('p', 'suave', 'Novedades'), nov);
+  datosNovedades(false).then(function (n) { bm.lastChild.textContent = n.mailSinLeer + ' mails'; }).catch(function () { /* sin backend nuevo: queda "Mail" */ });
 }
 
 /* ---------- GUÍA (wizard): una por pestaña, sale sola la primera vez ---------- */
@@ -83,6 +90,7 @@ const GUIAS = {
   PANEL: [
     [porId('g-buscar'), '🔍 Buscador', 'Escribí un nombre, empresa, mail o teléfono y tocá Enter. Se abre una ventana con los resultados.'],
     [porId('g-acc'), '⚡ Accesos rápidos', 'Pedido a un chat, plantillas, chats y actualizar. Todo en ventanas: hacés la acción y cerrás.'],
+    [porId('g-nov'), '📥 Novedades', 'Mail, agenda y Drive de tu cuenta, y el repaso de conversaciones de WhatsApp. Cada botón abre una ventana.'],
     [porId('g-num'), '📊 Tu resumen', 'Atrasados, para hoy y próximos. Tocá uno y se abre la lista; tocá un contacto y le escribís por WhatsApp.'],
     [navSec('TAREAS'), '✅ Menú', 'Abajo cambiás de sección. Cada una te explica cómo se usa la primera vez.'],
     [porId('varita'), '🪄 Guía', 'Tocá la varita en cualquier pantalla para ver la explicación de esa pantalla.']
@@ -103,6 +111,7 @@ const GUIAS = {
   ],
   'MÁS': [
     [porId('g-links'), '🔗 Links de los chats', 'Opcional. Para el botón "Abrir chat en Claude": abrí cada chat, copiá la dirección de la barra y pegala acá. ✅ = ya cargado.'],
+    [porId('g-avisos'), '🔔 Avisos', 'Elegí qué días y en qué horario te suenan los avisos de mail, agenda, Drive y chats.'],
     [porId('g-aspecto'), '🎨 Apariencia', 'Cambiá color y tamaño del texto.'],
     [porId('g-guias'), '🪄 Guías', 'Acá activás o desactivás las guías automáticas.']
   ]
@@ -212,6 +221,9 @@ vistaAjustes = function () {
     guardarLocal(CLAVE_URLS, nuevo); aviso('Links guardados'); vistaAjustes();
   }));
   vista.append(links);
+
+  const av = el('div'); av.id = 'g-avisos'; vista.append(av);
+  bloqueAvisos().then(function (b) { av.replaceWith(b); });
 
   const asp = bloque('🎨 Apariencia', 'Color y tamaño del texto.');
   asp.id = 'g-aspecto';

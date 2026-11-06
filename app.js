@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v8'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v9'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -224,6 +224,9 @@ vistaAjustes = function () {
 
   const av = el('div'); av.id = 'g-avisos'; vista.append(av);
   bloqueAvisos().then(function (b) { av.replaceWith(b); });
+
+  const td = el('div'); vista.append(td);
+  bloqueTareasDiarias().then(function (b) { td.replaceWith(b); });
 
   const asp = bloque('🎨 Apariencia', 'Color y tamaño del texto.');
   asp.id = 'g-aspecto';

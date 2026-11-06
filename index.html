@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Redconar</title>
-<meta name="theme-color" content="#1f4e79">
+<meta name="theme-color" content="#4f46e5">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<header id="top"><span class="logo">Redconar</span><button id="varita" class="varita" aria-label="Guía" title="Guía">🪄</button></header>
 <main id="vista"></main>
 <nav id="menu" aria-label="Secciones"></nav>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<!-- El orden importa: cada archivo usa lo que definen los anteriores. app.js va último y reemplaza pantallas de los anteriores. -->
+<!-- El orden importa: cada archivo usa lo que definen los anteriores. app.js va último. -->
 <script src="config.js"></script>
 <script src="js/util.js"></script>
 <script src="js/api.js"></script>
 <script src="js/ficha.js"></script>
-<script src="js/hoy.js"></script>
 <script src="js/buscar.js"></script>
 <script src="js/chat.js"></script>
 <script src="js/ajustes.js"></script>
+<script src="js/tareas.js"></script>
 <script src="plantillas.js"></script>
 <script src="app.js"></script>
 </body>

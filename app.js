@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v12'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v13'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -45,6 +45,7 @@ function atajo(emoji, texto, accion) {
 async function vistaPanel() {
   vista.textContent = '';
   vista.append(titulo('¡Hola, Facu! 👋'));
+  vista.append(boton('🆕 Traer nuevos (mails + Clientify)', popupNuevos, 'grande'));
   const q = campo('🔍 Buscar contacto (nombre, empresa, mail, teléfono)', 'search');
   q.id = 'g-buscar';
   q.onkeydown = function (e) { if (e.key === 'Enter' && q.value.trim().length >= 3) popupBuscar(q.value.trim()); };
@@ -200,7 +201,7 @@ function aplicarApariencia() {
   const t = TEMAS[a.tema] || TEMAS.Azul;
   const oscuro = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
   const r = document.documentElement.style;
-  r.setProperty('--g1', t[0]); r.setProperty('--g2', t[1]); r.setProperty('--marca', oscuro ? t[2] : t[0]);
+  r.setProperty('--g1', t[0]); r.setProperty('--g2', t[1]); r.setProperty('--marca', t[0]);
   r.setProperty('--tam', a.texto + 'px');
 }
 vistaAjustes = function () {

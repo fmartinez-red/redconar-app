@@ -80,13 +80,14 @@ function formGestion(f, nombre) {
   const r = campo('Respuesta (si hubo)');
   const p = campo('Próximo paso');
   const fe = campo('', 'date');
+  const et = lista(ETAPAS.map(function (x) { return [x, x]; }));
   fe.setAttribute('aria-label', 'Fecha del próximo paso');
-  caja.append(m, r, p, el('p', 'suave', 'Fecha del próximo paso'), fe, boton('Guardar gestión', async function () {
+  caja.append(m, r, p, el('p', 'suave', 'Etapa'), et, el('p', 'suave', 'Fecha del próximo paso'), fe, boton('Guardar gestión', async function () {
     if (!m.value.trim()) { aviso('Escribí qué hiciste'); return; }
     const fecha = fe.value ? fe.value.split('-').reverse().join('/') : '';
     const res = await api('gestion', {
       nombre: f.nombre, apellido: f.apellido, empresa: f.empresa, telefono: f.telefono, id: f.id, tipo: f.tipo,
-      mensaje: m.value, respuesta: r.value, proximo: p.value, fechaProximo: fecha
+      mensaje: m.value, respuesta: r.value, proximo: p.value, fechaProximo: fecha, etapa: et.value
     });
     invalidarInicio();
     aviso(res.notaEnCola ? 'Guardado. Nota en cola para Clientify.' : 'Guardado en la hoja.');

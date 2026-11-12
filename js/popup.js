@@ -32,7 +32,7 @@ function bloqueWhatsApp(f) {
     try { await navigator.clipboard.writeText(txt.value); } catch (e) { /* abre igual con el texto en el enlace */ }
     window.open('https://wa.me/' + wa + (txt.value ? '?text=' + encodeURIComponent(txt.value) : ''), '_blank');
   }, 'wa'), boton('📝 Registrar envío', async function () {
-    const res = await api('gestion', { nombre: f.nombre, apellido: f.apellido, empresa: f.empresa, telefono: f.telefono, id: f.id, tipo: f.tipo, mensaje: 'WhatsApp: ' + txt.value, respuesta: '', proximo: '', fechaProximo: '' });
+    const res = await api('gestion', { nombre: f.nombre, apellido: f.apellido, empresa: f.empresa, telefono: f.telefono, id: f.id, tipo: f.tipo, mensaje: 'WhatsApp: ' + txt.value, respuesta: '', proximo: 'Esperar respuesta', fechaProximo: ddmmyyyy(3), etapa: 'Contactado' });
     invalidarInicio();
     aviso(res.notaEnCola ? 'Registrado. Nota en cola para Clientify.' : 'Registrado en la hoja.');
   }, 'sec'));

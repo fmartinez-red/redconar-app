@@ -68,7 +68,7 @@ vistaBuscar = async function () {
   const base = leerLocal(CLAVE_BASE, '');
   if (base) return vistaBase(base);
 
-  vista.append(boton('🆕 Traer nuevos (mails + Clientify)', popupNuevos, 'grande'));
+  vista.append(boton('🆕 Traer nuevos (mails + Clientify)', popupNuevos, 'grande'), boton('➕ Nuevo contacto (pegar texto o foto)', popupNuevoContacto, 'sec'));
   const q = campo('🔍 Buscar por nombre, empresa, mail o teléfono', 'search');
   q.onkeydown = function (e) { if (e.key === 'Enter' && q.value.trim().length >= 3) popupBuscar(q.value.trim()); };
   vista.append(q, el('p', 'suave', 'O elegí una base (lista) para trabajarla:'));
@@ -216,17 +216,20 @@ function popupLeadMail(x) {
   const abrir = function (n) { zona.textContent = ''; zona.append(n); n.scrollIntoView({ block: 'nearest' }); };
   c.append(boton('💬 WhatsApp con plantilla', function () { abrir(bloqueWhatsApp(f)); }, 'wa'),
     boton('📤 Pedido a VENTAS (cargar en Base/Clientify)', function () { abrir(formPedido(f, nombre, 'VENTAS REDCONAR', m.cerrar)); }, 'sec'),
+    boton('➕ Cargar en Base Viva', async function () { const r = await api('contactoNuevo', { nombre: x.nombre, telefono: x.telefono, email: x.email, fuente: 'Formulario mail', notas: x.texto.slice(0, 200) }); invalidarInicio(); aviso(r.existia ? 'Ya estaba en la base' : 'Cargado en Base Viva'); m.cerrar(); popupContacto({ fila: r.fila }); }, 'sec'),
     boton('✓ Marcar mail leído', async function () { await api('mailLeer', { ids: [x.id] }); aviso('Leído'); }, 'sec'), zona);
 }
 
 /* ---------- ficha rápida con más acciones ---------- */
 const ESTADOS_RAPIDOS = [['🧊 Frío', 'frio', '#0ea5e9'], ['🟠 Tibio', 'tibio', '#f59e0b'], ['🔥 Caliente', 'caliente', '#ef4444'], ['✅ Cliente', 'cliente', '#16a34a'], ['⚫ Descartar', 'descartado', '#64748b']];
+const ETAPAS = ['Contactado', 'Sin respuesta', 'Respondió', 'Demo agendada', 'Demo hecha', 'Presupuesto enviado', 'Cliente', 'Descartado'];
+const COLOR_ETAPA = { 'Contactado': '#2563eb', 'Sin respuesta': '#64748b', 'Respondió': '#16a34a', 'Demo agendada': '#8b5cf6', 'Demo hecha': '#7c3aed', 'Presupuesto enviado': '#f59e0b', 'Cliente': '#15803d', 'Descartado': '#475569' };
 const GESTIONES_RAPIDAS = [
-  ['😶 Sin respuesta', 'Sin respuesta', 3, '#64748b'],
-  ['💬 Respondió', 'Respondió por WhatsApp', 2, '#16a34a'],
-  ['📞 Llamé', 'Llamada realizada', 2, '#2563eb'],
-  ['📅 Pidió demo', 'Pidió demo / reunión', 1, '#8b5cf6'],
-  ['🔁 Volver a escribir', 'Volver a contactar', 7, '#f59e0b']
+  ['😶 Sin respuesta', 'Sin respuesta', 3, '#64748b', 'Sin respuesta'],
+  ['💬 Respondió', 'Respondió por WhatsApp', 2, '#16a34a', 'Respondió'],
+  ['📞 Llamé', 'Llamada realizada', 2, '#2563eb', 'Contactado'],
+  ['📅 Pidió demo', 'Pidió demo / reunión', 1, '#8b5cf6', 'Demo agendada'],
+  ['🔁 Volver a escribir', 'Volver a contactar', 7, '#f59e0b', 'Contactado']
 ];
 
 popupContacto = async function (ref) {
@@ -277,7 +280,7 @@ popupContacto = async function (ref) {
       b.onclick = async function () {
         b.disabled = true;
         try {
-          await api('gestion', { nombre: f.nombre, apellido: f.apellido, empresa: f.empresa, telefono: f.telefono, id: f.id, tipo: f.tipo, mensaje: g[1], respuesta: '', proximo: 'Seguimiento', fechaProximo: ddmmyyyy(g[2]) });
+          await api('gestion', { nombre: f.nombre, apellido: f.apellido, empresa: f.empresa, telefono: f.telefono, id: f.id, tipo: f.tipo, mensaje: g[1], respuesta: '', proximo: 'Seguimiento', fechaProximo: ddmmyyyy(g[2]), etapa: g[4] });
           invalidarInicio(); aviso('Registrado: ' + g[1] + ' (próximo en ' + g[2] + ' días)');
         } catch (x) { aviso('No se pudo: ' + x.message); }
         b.disabled = false;

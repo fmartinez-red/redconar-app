@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v13'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v14'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -50,9 +50,10 @@ async function vistaPanel() {
   q.id = 'g-buscar';
   q.onkeydown = function (e) { if (e.key === 'Enter' && q.value.trim().length >= 3) popupBuscar(q.value.trim()); };
   vista.append(q);
-  const acc = el('div', 'atajos');
+  const acc = el('div', 'atajos cinco');
   acc.id = 'g-acc';
   acc.append(
+    atajo('➕', 'Nuevo contacto', popupNuevoContacto),
     atajo('📤', 'Pedido a chat', popupPedido),
     atajo('📋', 'Plantillas', popupPlantillas),
     atajo('💬', 'Chats', popupChats),

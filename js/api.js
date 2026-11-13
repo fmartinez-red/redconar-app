@@ -10,7 +10,9 @@ function datosToken(t) {
   try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; }
 }
 function sesionVigente() {
-  const p = datosToken(leerSesion());
+  const s = String(leerSesion() || '');
+  if (s.indexOf('S.') === 0) return Number(s.split('.')[1]) > Date.now() + 60000; // sesión propia de 90 días
+  const p = datosToken(s);
   return Boolean(p && p.exp * 1000 > Date.now() + 60000);
 }
 

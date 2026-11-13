@@ -98,7 +98,7 @@ async function vistaBase(fuente) {
   let r;
   try { r = await api('lista', { fuente: fuente }); } catch (e) { estado.textContent = 'No se pudo cargar: ' + e.message; return; }
   estado.remove();
-  const S = { temp: '', orden: leerLocal('redconar_orden', 'nombre'), q: '', sin: false, max: 60 };
+  const S = { temp: '', orden: leerLocal('redconar_orden', 'nombre'), q: '', sin: false, max: 60, uf: '', dias: 0, tel: false, tipo: '' };
   const items = r.items;
 
   const buscador = campo('Filtrar dentro de esta base...', 'search');
@@ -127,6 +127,12 @@ async function vistaBase(fuente) {
     sinG.className = 'pill' + (S.sin ? ' on' : '');
     sinG.onclick = function () { S.sin = !S.sin; pintar(); };
     pills.append(sinG);
+    const pr = el('button', 'pill' + (S.uf === '200-1000' && S.dias === 30 ? ' on' : ''), '⭐ 200-1000 UF sin trabajar');
+    pr.onclick = function () { const on = S.uf === '200-1000' && S.dias === 30; S.uf = on ? '' : '200-1000'; S.dias = on ? 0 : 30; pintar(); };
+    const nf = (S.uf ? 1 : 0) + (S.dias ? 1 : 0) + (S.tel ? 1 : 0) + (S.tipo ? 1 : 0);
+    const fb = el('button', 'pill' + (nf ? ' on' : ''), '🎚 Filtros' + (nf ? ' (' + nf + ')' : ''));
+    fb.onclick = function () { popupFiltros(items, S, pintar); };
+    pills.append(pr, fb);
   }
 
   function pintar() {
@@ -135,6 +141,10 @@ async function vistaBase(fuente) {
     let l = items.filter(function (c) {
       if (S.temp && tempDe(c.estado, c.tipo)[0] !== S.temp) return false;
       if (S.sin && c.gest) return false;
+      if (S.uf) { const u = ufNum(c.ufSistema); const r = S.uf.split('-'); if (S.uf === '0-199' ? !(u < 200) : S.uf === '1001' ? !(u > 1000) : !(u >= 200 && u <= 1000)) return false; }
+      if (S.tel && !waNumero(c.telefono)) return false;
+      if (S.tipo && String(c.tipo || '') !== S.tipo) return false;
+      if (S.dias) { const n = fechaNum(c.ultimoContacto); if (n) { const d = new Date(Math.floor(n / 10000), Math.floor(n / 100) % 100 - 1, n % 100); if ((Date.now() - d.getTime()) / 86400000 < S.dias) return false; } }
       if (q && [c.nombre, c.apellido, c.empresa, c.email, c.telefono].join(' ').toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
@@ -307,3 +317,24 @@ popupBuscar = async function (texto) {
   if (!l.length) m.cuerpo.append(vacio('Sin resultados.'));
   l.forEach(function (c) { m.cuerpo.append(filaContacto(c, function () { popupContacto({ fila: c.fila }); })); });
 };
+
+function popupFiltros(items, S, pintar) {
+  const m = abrirModal('🎚 Filtros', null);
+  m.cuerpo.classList.add('angosto');
+  const grupo = function (tit, key, ops) {
+    m.cuerpo.append(el('p', 'suave', tit));
+    const f = el('div', 'pills wrap');
+    ops.forEach(function (o) {
+      const b = el('button', 'pill' + (String(S[key]) === String(o[0]) ? ' on' : ''), o[1]);
+      b.onclick = function () { S[key] = o[0]; Array.from(f.children).forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); };
+      f.append(b);
+    });
+    m.cuerpo.append(f);
+  };
+  grupo('UF', 'uf', [['', 'Todas'], ['0-199', 'Menos de 200'], ['200-1000', '200 a 1000'], ['1001', 'Más de 1000']]);
+  grupo('Sin contacto hace más de', 'dias', [[0, 'Cualquiera'], [7, '7 días'], [15, '15 días'], [30, '30 días'], [60, '60 días'], [90, '90 días']]);
+  grupo('Teléfono', 'tel', [[false, 'Todos'], [true, 'Solo con teléfono']]);
+  const tipos = Array.from(new Set(items.map(function (c) { return String(c.tipo || ''); }).filter(Boolean))).slice(0, 8);
+  if (tipos.length) grupo('Tipo', 'tipo', [['', 'Todos']].concat(tipos.map(function (t) { return [t, t]; })));
+  m.cuerpo.append(boton('Aplicar', function () { m.cerrar(); S.max = 60; pintar(); }), boton('Limpiar todo', function () { S.uf = ''; S.dias = 0; S.tel = false; S.tipo = ''; m.cerrar(); pintar(); }, 'sec'));
+}

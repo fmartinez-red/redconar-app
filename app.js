@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v15'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v16'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -42,7 +42,7 @@ function atajo(emoji, texto, accion) {
   return b;
 }
 
-async function vistaPanel() {
+async function vistaPanelViejo() {
   vista.textContent = '';
   vista.append(titulo('¡Hola, Facu! 👋'));
   vista.append(boton('🆕 Traer nuevos (mails + Clientify)', popupNuevos, 'grande'));
@@ -205,7 +205,7 @@ function aplicarApariencia() {
   r.setProperty('--g1', t[0]); r.setProperty('--g2', t[1]); r.setProperty('--marca', t[0]);
   r.setProperty('--tam', a.texto + 'px');
 }
-vistaAjustes = function () {
+window.vistaAjustesViejo = function () {
   vista.textContent = '';
   vista.append(titulo('⚙️ Más', 'Ajustes de la app. Se guardan solo en este celular.'));
   const a = leerLocal('redconar_aspecto', { tema: 'Azul', texto: 17 });
@@ -266,6 +266,9 @@ vistaAjustes = function () {
 aplicarApariencia();
 
 /* ---------- LOGIN Y ARRANQUE ---------- */
+vistaAjustes = vistaAjustesNueva;
+aplicarPlantillas();
+if (sesionVigente()) bajarCfg();
 function pantallaLogin() {
   menu.textContent = '';
   vista.textContent = '';

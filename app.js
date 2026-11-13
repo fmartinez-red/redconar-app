@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v16'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v17'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -268,6 +268,7 @@ aplicarApariencia();
 /* ---------- LOGIN Y ARRANQUE ---------- */
 vistaAjustes = vistaAjustesNueva;
 aplicarPlantillas();
+ajustarTam();
 if (sesionVigente()) bajarCfg();
 function pantallaLogin() {
   menu.textContent = '';

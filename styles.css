@@ -108,3 +108,34 @@ nav button.activo .ico { transform: scale(1.15); }
 .cfg-sec { background: var(--caja); border: 1px solid var(--borde); border-radius: 14px; padding: 10px 14px; margin-bottom: 8px; }
 .cfg-sec summary { font-weight: 700; padding: 6px 0; cursor: pointer; }
 .cfg-sec label.fila { gap: 8px; justify-content: flex-start; }
+/* v17: tamaños más chicos y componentes nuevos */
+:root { --tam: 15px; }
+h1 { font-size: 20px; margin: 4px 0; } h2 { font-size: 16px; }
+input, textarea, .btn, .selector { min-height: 42px; padding: 9px 12px; margin-bottom: 8px; border-radius: 12px; font-size: 15px; }
+.selector { width: 100%; text-align: left; border: 1px solid var(--borde); background: var(--caja); color: var(--texto); font: inherit; }
+.btn.grande { min-height: 48px; font-size: 16px; }
+.btn.chico { width: auto; min-height: 34px; padding: 4px 12px; margin: 0; font-size: 13px; }
+.pill { padding: 5px 11px; font-size: 13px; }
+.t-chip { padding: 2px 8px; font-size: 11px; }
+.chip { padding: 2px 9px; font-size: 12px; }
+.fila { padding: 9px 12px; margin-bottom: 6px; }
+.fila .wa-mini { width: 36px; height: 36px; font-size: 17px; }
+.atajo { padding: 9px 2px; font-size: 11px; } .atajo .em { font-size: 22px; }
+.num .gran { font-size: 26px; }
+.modal-cab { font-size: 16px; padding: 10px 0 8px; }
+.modal.angosto { max-width: 380px; margin: 0 auto; border-radius: 18px; align-self: center; max-height: 80vh; }
+.modal-fondo:has(.modal.angosto) { align-items: center; }
+.opcion { display: block; width: 100%; text-align: left; padding: 11px 14px; margin-bottom: 6px; border: 1px solid var(--borde); border-radius: 12px; background: var(--caja); color: var(--texto); font: inherit; font-size: 15px; }
+.opcion.on { border-color: var(--marca); background: #e0ecff; font-weight: 700; }
+.fila.desliza { transition: transform .15s; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+.fila.lista-wa { background: #bbf7d0; }
+.fila.elegida { outline: 3px solid var(--marca); background: #e0ecff; }
+#barra-sel { position: fixed; left: 8px; right: 8px; bottom: calc(70px + env(safe-area-inset-bottom)); z-index: 40; display: flex; align-items: center; gap: 8px; background: var(--texto); color: #fff; border-radius: 14px; padding: 8px 12px; box-shadow: 0 6px 20px rgba(0,0,0,.35); }
+#barra-sel strong { flex: 1; font-size: 14px; }
+#barra-sel .bs { border: 0; border-radius: 10px; background: rgba(255,255,255,.18); color: #fff; font-size: 18px; padding: 6px 12px; }
+.pn-bloque { margin-bottom: 4px; -webkit-user-select: none; user-select: none; }
+.pn-bloque.editando { border: 2px dashed var(--marca); border-radius: 14px; padding: 6px; margin-bottom: 10px; }
+.edit-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; } .edit-bar span { flex: 1; font-size: 13px; font-weight: 700; }
+.mini { border: 1px solid var(--borde); background: var(--caja); border-radius: 8px; padding: 4px 10px; font-size: 14px; }
+.edit-t { position: relative; } .edit-t-bt { display: flex; gap: 2px; justify-content: center; margin-top: 2px; } .edit-t-bt .mini { padding: 2px 6px; font-size: 12px; }
+.centro { text-align: center; font-size: 12px; }

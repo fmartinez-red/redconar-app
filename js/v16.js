@@ -48,10 +48,10 @@ filaContacto = function (c, alTocar, casilla) {
   }, { passive: true });
   return k;
 };
-function deslizarWA(c) {
+function deslizarWA(c, pid) {
   const wa = waNumero(c.telefono);
   if (!wa) { aviso('Sin teléfono'); return; }
-  const id = cfg().swipe;
+  const id = pid || cfg().swipe;
   const p = PLANTILLAS.find(function (x) { return x.id === id; }) || PLANTILLAS[0];
   const txt = armarTexto(p, { nombre: c.nombre || '' });
   window.open('https://wa.me/' + wa + '?text=' + encodeURIComponent(txt), '_blank');
@@ -72,9 +72,9 @@ async function popupSemana(s) {
       detalle: 'Cruzar con WhatsApp Web estos contactos de Clientify (leer solo estos chats). Informar quiénes respondieron y quiénes no, registrar en Log_Actividades y Base Viva.\n' +
         r.items.map(function (x) { return '- ' + (x.nombre || x.empresa) + ' | ' + x.telefono + ' | ' + (x.gestionado ? 'gestionado' : 'SIN GESTIONAR'); }).join('\n')
     });
-    aviso('Pedido enviado a VENTAS');
+    copiarYAbrir('VENTAS REDCONAR', 'Cruzar con WhatsApp estos contactos de Clientify de la semana (el detalle también quedó en Traspasos).\n' + r.items.map(function (x) { return '- ' + (x.nombre || x.empresa) + ' | ' + x.telefono + ' | ' + (x.gestionado ? 'gestionado' : 'SIN GESTIONAR'); }).join('\n'));
   }));
-  (sin.length ? sin : r.items).forEach(function (x) { m.cuerpo.append(filaContacto(x, function () { popupContacto({ fila: x.fila }); })); });
+  (sin.length ? sin : r.items).forEach(function (x) { m.cuerpo.append(filaContacto(x, function () { popupContacto({ fila: x.fila || undefined, telefono: x.telefono, nombre: x.nombre, empresa: x.empresa }); })); });
 }
 function popupTraer() {
   const m = abrirModal('🆕 Traer nuevos', null);

@@ -2,7 +2,7 @@
 
 const CLAVE_CFG = 'redconar_cfg16';
 const DIAS_N = [[1, 'Lunes'], [2, 'Martes'], [3, 'Miércoles'], [4, 'Jueves'], [5, 'Viernes'], [6, 'Sábado'], [0, 'Domingo']];
-const BLOQUES = [['nuevos', '🆕 Traer nuevos'], ['buscar', '🔍 Buscador'], ['contadores', '🔢 Contadores'], ['atajos', '⚡ Atajos'], ['novedades', '📬 Novedades'], ['gestionados', '✔ Gestionados']];
+const BLOQUES = [['hero', '🌟 Resumen'], ['stats', '🔢 Contadores'], ['atajos', '⚡ Atajos'], ['gestionados', '✔ Gestionados'], ['buscar', '🔍 Buscador'], ['nuevos', '🆕 Traer nuevos'], ['novedades', '📬 Novedades']];
 const CFG_BASE = {
   jornada: { dias: { 1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18], 6: null, 0: null }, libres: [] },
   reporte: { activo: true, hora: 9, mail: true, ntfy: true },
@@ -172,26 +172,9 @@ function cfgReporte() {
   return caja;
 }
 function cfgPanel() {
-  const p = cfg().panel;
-  let orden = p.orden.concat(BLOQUES.map(function (b) { return b[0]; }).filter(function (b) { return p.orden.indexOf(b) < 0; }));
-  const ocultos = p.ocultos.slice();
-  const caja = el('div');
-  const dibujar = function () {
-    caja.textContent = '';
-    orden.forEach(function (id, i) {
-      const nom = BLOQUES.find(function (b) { return b[0] === id; })[1];
-      const f = el('div', 'fila');
-      const v = el('input'); v.type = 'checkbox'; v.checked = ocultos.indexOf(id) < 0;
-      v.onchange = function () { const j = ocultos.indexOf(id); if (v.checked && j >= 0) ocultos.splice(j, 1); if (!v.checked && j < 0) ocultos.push(id); };
-      const sube = el('button', 'btn sec', '↑'); sube.onclick = function () { if (i > 0) { orden.splice(i - 1, 0, orden.splice(i, 1)[0]); dibujar(); } };
-      const baja = el('button', 'btn sec', '↓'); baja.onclick = function () { if (i < orden.length - 1) { orden.splice(i + 1, 0, orden.splice(i, 1)[0]); dibujar(); } };
-      f.append(v, el('strong', null, nom), sube, baja);
-      caja.append(f);
-    });
-    caja.append(boton('Guardar panel', function () { return guardarCfg({ panel: { orden: orden, ocultos: ocultos } }); }));
-  };
-  dibujar();
-  return caja;
+  const c = el('div');
+  c.append(el('p', 'suave', 'En el panel, mantené apretado un bloque o un cuadrito para ordenar, sacar o agregar.'), boton('Editar el panel ahora', function () { EDITANDO = true; irA('PANEL'); }));
+  return c;
 }
 function cfgPlantillas() {
   const caja = el('div');

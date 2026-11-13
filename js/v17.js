@@ -236,9 +236,25 @@ const ATAJOS = {
   contactos: ['👥', 'Contactos', function () { irA('CONTACTOS'); }],
   actualizar: ['🔄', 'Actualizar', async function () { await datosInicio(true); vistaPanel(); }]
 };
-const ATAJOS_DEF = ['nuevo', 'pedido', 'claude', 'chats', 'config'];
+const ATAJOS_DEF = ['nuevo', 'pedido', 'claude', 'chats', 'semana', 'semanaAnt', 'plantillas', 'config'];
+const PANEL_DEF = { orden: ['hero', 'stats', 'atajos', 'gestionados'], ocultos: ['buscar', 'nuevos', 'novedades'] };
 let EDITANDO = false;
 
+function ponerBadge(n) {
+  const b = document.getElementById('campana-n');
+  if (b) { b.textContent = n; b.style.display = n ? '' : 'none'; }
+}
+(function () {
+  const top = document.getElementById('top');
+  if (top && !document.getElementById('campana')) {
+    const c = el('button', 'varita', '🔔'); c.id = 'campana'; c.style.position = 'relative';
+    const n = el('span', 'badge-n', ''); n.id = 'campana-n'; n.style.display = 'none'; c.append(n);
+    c.onclick = function () { popupSemana(0); };
+    top.insertBefore(c, document.getElementById('varita'));
+    document.getElementById('varita').style.marginLeft = '8px';
+    const f = el('button', 'fab', '🎤'); f.id = 'fab'; f.onclick = function () { popupDictar(); }; document.body.append(f);
+  }
+})();
 function largo(elem, f) {
   let t = null;
   elem.addEventListener('touchstart', function () { t = setTimeout(function () { t = null; if (navigator.vibrate) navigator.vibrate(30); f(); }, 600); }, { passive: true });
@@ -249,14 +265,44 @@ function mover(arr, i, d) { const j = i + d; if (j < 0 || j >= arr.length) retur
 
 async function vistaPanel() {
   vista.textContent = '';
-  vista.append(titulo('¡Hola, Facu! 👋'));
   const c = cfg();
-  const orden = c.panel.orden.slice();
-  const ocultos = c.panel.ocultos.slice();
+  const P2 = c.panel2 || PANEL_DEF;
+  const orden = P2.orden.slice();
+  const ocultos = P2.ocultos.slice();
   const atajos = (c.atajos || ATAJOS_DEF).slice();
-  const guardar = function () { return guardarCfg({ panel: { orden: orden, ocultos: ocultos }, atajos: atajos }); };
+  const guardar = function () { return guardarCfg({ panel2: { orden: orden, ocultos: ocultos }, atajos: atajos }); };
   BLOQUES.forEach(function (b) { if (orden.indexOf(b[0]) < 0 && ocultos.indexOf(b[0]) < 0) ocultos.push(b[0]); });
   const hechos = {
+    hero: function () {
+      const h = el('div', 'hero tocable');
+      const n = el('div', 'hero-n', '…');
+      const sub = el('p', 'hero-sub', 'Contactos de Clientify sin gestionar esta semana');
+      const g = el('div', 'hero-glass');
+      const izq = el('div'); izq.append(el('span', 'hero-lab', 'Atrasados · Para hoy'));
+      const v = el('strong', 'hero-v', '– · –'); izq.append(v);
+      g.append(izq, el('span', 'hero-flecha', '›'));
+      g.onclick = function (e) { e.stopPropagation(); popupTareas('vencidos'); };
+      const b = el('button', 'hero-btn', '🆕 Traer nuevos'); b.onclick = function (e) { e.stopPropagation(); popupTraer(); };
+      h.append(el('span', 'hero-lab', 'Hola Facu 👋'), n, sub, g, b);
+      h.onclick = function () { popupSemana(0); };
+      api('semana', { semana: 0 }).then(function (r) { n.textContent = r.sin; ponerBadge(r.sin); sub.textContent = r.sin === 1 ? 'contacto de Clientify sin gestionar esta semana' : 'contactos de Clientify sin gestionar esta semana'; }).catch(function () { n.textContent = '?'; });
+      datosInicio(false).then(function (d) { v.textContent = d.agenda.vencidos.length + ' · ' + d.agenda.hoy.length; }).catch(function () { });
+      return h;
+    },
+    stats: function () {
+      const s = el('div', 'stats');
+      const t = function (num, lab, f) { const k = el('div', 'stat tocable'); const nn = el('strong', null, String(num)); k.append(nn, el('span', null, lab)); k.onclick = f; s.append(k); return nn; };
+      const a = t('–', 'Atrasados', function () { popupTareas('vencidos'); });
+      const b = t('–', 'Hoy', function () { popupTareas('hoy'); });
+      const cc = t('–', 'Pedidos', popupChats);
+      const dd = t('–', 'Sem. ant.', function () { popupSemana(1); });
+      datosInicio(false).then(function (d) {
+        a.textContent = d.agenda.vencidos.length; b.textContent = d.agenda.hoy.length;
+        cc.textContent = CHATS.reduce(function (z, x) { return z + ((d.chats[x] || { pendientes: [] }).pendientes.length); }, 0);
+      }).catch(function () { });
+      api('semana', { semana: 1 }).then(function (r) { dd.textContent = r.sin; }).catch(function () { });
+      return s;
+    },
     nuevos: function () { return boton('🆕 Traer nuevos', popupTraer, 'grande'); },
     buscar: function () {
       const q = campo('🔍 Buscar contacto', 'search');
@@ -279,10 +325,14 @@ async function vistaPanel() {
           a.append(w);
         } else { largo(t, function () { EDITANDO = true; vistaPanel(); }); a.append(t); }
       });
-      return a;
+      const w = el('div');
+      const th = el('div', 'sec-tit'); th.append(el('h2', null, 'Atajos rápidos'));
+      const pb = el('button', 'sec-btn', EDITANDO ? 'Listo' : 'Personalizar'); pb.onclick = function () { EDITANDO = !EDITANDO; vistaPanel(); };
+      th.append(pb); w.append(th, a);
+      return w;
     },
     novedades: function () { const n = el('div', 'atajos'); ['mail', 'agenda', 'drive', 'wa'].forEach(function (id) { const d = ATAJOS[id]; n.append(atajo(d[0], d[1], d[2])); }); return n; },
-    gestionados: function () { return bloqueGestionados(); },
+    gestionados: function () { const w = el('div'); const th = el('div', 'sec-tit'); th.append(el('h2', null, 'Gestionados')); w.append(th, bloqueGestionados()); return w; },
     contadores: function () {
       const g = el('div', 'grid2');
       g.id = 'g-num';
@@ -333,6 +383,6 @@ async function vistaPanel() {
     }, 'sec');
     vista.append(ag, boton('✔ Listo', function () { EDITANDO = false; vistaPanel(); }));
   } else {
-    vista.append(el('p', 'suave centro', 'Mantené apretado un bloque o cuadrito para editarlo'));
+    /* sin cartel */
   }
 }

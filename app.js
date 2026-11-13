@@ -1,5 +1,5 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v14'; // subir junto con VERSION en sw.js
+const VERSION_APP = 'v15'; // subir junto con VERSION en sw.js
 const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
@@ -274,7 +274,7 @@ function pantallaLogin() {
   vista.append(caja);
   const iniciar = function () {
     if (!window.google || !google.accounts) { setTimeout(iniciar, 300); return; }
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: function (r) { guardarLocal(CLAVE_SESION, r.credential); armarMenu(); irA('PANEL'); } });
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: async function (r) { guardarLocal(CLAVE_SESION, r.credential); try { const s = await api('login'); if (s && s.sesion) guardarLocal(CLAVE_SESION, s.sesion); } catch (e) { /* queda la sesión de Google (1 hora) */ } armarMenu(); irA('PANEL'); } });
     google.accounts.id.renderButton(caja, { theme: 'filled_blue', size: 'large', text: 'signin_with', width: 280 });
   };
   iniciar();

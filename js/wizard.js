@@ -1,5 +1,5 @@
 /* Wizard 🪄: base de conocimiento de la app. REGLA: cada cambio en la app suma o corrige una entrada acá. */
-const WIZ_VERSION = 'v25';
+const WIZ_VERSION = 'v26';
 const WIZ = [
   { t: 'Pantalla Hoy y semáforo', k: 'hoy semaforo colores atrasados gestionar vencidos',
     d: 'Hoy muestra "A gestionar hoy": contactos que tocaban hoy más los atrasados. El color dice hace cuánto: 🟢 verde 0 a 1 día, 🟡 amarillo hasta 7 días, 🔴 rojo más de 7. Tocá los chips de color para filtrar. "Próximos" son los de días siguientes. La app calcula todo sola según la secuencia.' },
@@ -27,6 +27,8 @@ const WIZ = [
     d: '➕ Cargar lista: pegás contactos (nombre, teléfono, fuente) y la app los da de alta en la Base Viva y los pone en la secuencia en T1.' },
   { t: 'Chats de Claude', k: 'chats links ventas redconar plataforma datos presupuestos',
     d: 'Los cuatro chats (VENTAS, PLATAFORMA, DATOS y PRESUPUESTOS REDCONAR) tienen su link guardado en la app. Cuando mandás algo, la app copia el prompt y abre el chat correcto.' },
+  { t: 'Chat de Google (Workspace)', k: 'chat google workspace mensajes espacios responder conversacion',
+    d: 'Botón 💬 Chat de Google en Hoy: ves tus espacios y chats directos (ordenados por última actividad), buscás por nombre, abrís una conversación, leés los últimos 30 mensajes y respondés con 📤 Enviar. Usa tu cuenta de Redconar. Si dice que no pudo leer Chat, hay que volver a autorizar el script en Apps Script.' },
   { t: 'Si algo falla', k: 'error falla no anda problema arreglar actualizar version cache',
     d: 'Cerrá la app y volvela a abrir para cargar la última versión (abajo en Ajustes ves el número). Si el agente no responde: verificá que la PC esté prendida con Chrome abierto y mirá Agente\\agente.log. Si una orden queda en error, el motivo está en el panel del agente.' }
 ];

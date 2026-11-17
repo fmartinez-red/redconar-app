@@ -313,3 +313,38 @@ vistaPanel = async function () {
   };
   pintar();
 };
+
+/* ---------- textos aprobados (T3 y T4 borrador): revisar, editar, aprobar ---------- */
+const CLAVE_TEXTOS = 'redconar_textos_aprobados';
+function textosGuardados() { return leerLocal(CLAVE_TEXTOS, {}) || {}; }
+textoPaso = (function (orig) {
+  return function (n, nombre) {
+    const g = textosGuardados()[n];
+    if (g) return g.replace(/\{n\}/g, primerNombre(nombre));
+    return orig(n, nombre);
+  };
+})(textoPaso);
+Object.keys(textosGuardados()).forEach(function (n) { BORRADOR[n] = false; });
+function popupAprobarTexto(paso, nombre) {
+  const m = abrirModal('✏️ Texto del ' + PASOS[paso].nom.split(' · ')[0], null);
+  m.cuerpo.classList.add('angosto');
+  const t = campo('Texto (el nombre del contacto se pone solo)', 'area', textoPaso(paso, nombre).split(primerNombre(nombre)).join('{n}')); t.rows = 7;
+  m.cuerpo.append(t, el('p', 'suave', 'Si lo aprobás o lo editás, te llevo a Claude (Ventas) con el texto listo para que lo guarde como plantilla aprobada.'));
+  m.cuerpo.append(boton('✅ Aprobar este texto', async function () {
+    const g = textosGuardados(); g[paso] = t.value; guardarLocal(CLAVE_TEXTOS, g); BORRADOR[paso] = false;
+    m.cerrar();
+    await copiarYAbrir('VENTAS REDCONAR', 'Aprobé este texto para el ' + PASOS[paso].nom + ' de la secuencia ({n} = primer nombre). Guardalo como plantilla aprobada en el proyecto y usalo desde ahora:\n\n' + t.value);
+    vistaPanel();
+  }));
+  m.cuerpo.append(boton('🧠 Mandar a Claude para que lo mejore', async function () {
+    m.cerrar();
+    await copiarYAbrir('VENTAS REDCONAR', 'Revisá y mejorá este borrador del ' + PASOS[paso].nom + ' aplicando las 5 reglas de redacción (tono positivo, pregunta sola, sin condicionar el interés). Proponeme la versión final y esperá mi OK:\n\n' + t.value);
+  }, 'sec'));
+}
+tarjeta = (function (orig) {
+  return function (x, paso, fin) {
+    const k = orig(x, paso, fin);
+    if (paso && BORRADOR[paso]) k.append(boton('✏️ Revisar y aprobar texto', function () { popupAprobarTexto(paso, x.nombre); }));
+    return k;
+  };
+})(tarjeta);

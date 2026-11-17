@@ -1,11 +1,16 @@
 /* v21: pantalla HOY = cola de trabajo con secuencia calculada por la app. */
 
 // Pegar acá los links de los chats de Claude si faltan en el celular.
-const URLS_DEFAULT = {};
+const URLS_DEFAULT = {
+  'VENTAS REDCONAR': 'https://claude.ai/chat/531b73f0-4886-42f7-bb29-239c5bca863a',
+  'PLATAFORMA REDCONAR': 'https://claude.ai/chat/0774957f-a146-46a6-8c40-83615bd5e882',
+  'DATOS REDCONAR': 'https://claude.ai/chat/5b01b93f-6875-4ea0-a616-2768a4a3f7c7',
+  'PRESUPUESTOS REDCONAR': 'https://claude.ai/chat/154250e0-5b84-40dd-95bd-a02d1b52b02a'
+};
 (function () {
   const u = leerLocal(CLAVE_URLS, {}) || {};
   let cambio = false;
-  Object.keys(URLS_DEFAULT).forEach(function (k) { if (!u[k] && URLS_DEFAULT[k]) { u[k] = URLS_DEFAULT[k]; cambio = true; } });
+  Object.keys(URLS_DEFAULT).forEach(function (k) { if (u[k] !== URLS_DEFAULT[k]) { u[k] = URLS_DEFAULT[k]; cambio = true; } });
   if (cambio) guardarLocal(CLAVE_URLS, u);
 })();
 

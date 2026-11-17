@@ -14,7 +14,7 @@ const PASOS = {
   1: { nom: 'Toque 1 · P1 + P2', gap: 2, sig: 2 },
   2: { nom: 'Toque 2 · video', gap: 2, sig: 3 },
   3: { nom: 'Toque 3 · prueba social', gap: 3, sig: 4 },
-  4: { nom: 'Cierre por mail', gap: 0, sig: 0 }
+  4: { nom: 'Cierre · mail', gap: 0, sig: 0 }
 };
 function pasoDe(texto) { const m = String(texto || '').match(/^\s*T([1-4])\b/i); return m ? Number(m[1]) : 0; }
 function etiquetaPaso(n) { return 'T' + n + ' · ' + PASOS[n].nom.split(' · ')[1]; }

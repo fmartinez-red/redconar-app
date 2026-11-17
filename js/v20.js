@@ -18,7 +18,7 @@ function rutear(texto) {
 const FORMATO_RESULTADO =
   'AL TERMINAR respondé con un bloque así (JSON válido, una entrada por contacto trabajado, fechas dd/mm/aaaa):\n' +
   'RESULTADO\n```json\n[{"nombre":"","apellido":"","empresa":"","telefono":"","fila":"","estado":"","mensaje":"","respuesta":"","proximo":"","fechaProximo":"","tipo":""}]\n```\n' +
-  'Aplicá Redconar/Protocolo_Prospeccion_Sistematica.md (secuencia, registro, reglas). Calculá fechaProximo con la secuencia.';
+  'Aplicá Redconar/Protocolo_Prospeccion_Sistematica.md (secuencia, registro, reglas). Calculá fechaProximo con la secuencia (días hábiles) y escribí proximo empezando con T2, T3, T4 o la acción (ej: "T2 · Touch 2 video").';
 
 function armarPrompt(chat, texto, ficha) {
   let p = 'Hoy es ' + ddmmyyyy(0) + '. Pedido para ' + chat + ':\n' + texto.trim();

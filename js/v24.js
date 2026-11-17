@@ -8,7 +8,7 @@ panelAgente = async function (caja) {
   try { r = await api('ordenes'); } catch (e) { caja.append(el('p', 'suave', 'No se pudieron leer las órdenes.')); return; }
   const L = r.ordenes || [];
   if (!L.length) { caja.append(el('p', 'suave', 'Todavía no hay órdenes. Tocá Arrancar.')); return; }
-  const o = L[0];
+  const o = L.filter(function (x) { return x.estado === 'espera_ok'; })[0] || L.filter(function (x) { return ['pendiente', 'en_curso', 'aprobada', 'corregir'].indexOf(x.estado) >= 0; })[0] || L[0];
   const activo = ['pendiente', 'en_curso', 'aprobada', 'corregir'].indexOf(o.estado) >= 0;
   const k = el('article', 'card');
   const col = { pendiente: '🟡 En cola', en_curso: '🔵 Trabajando', aprobada: '🔵 Trabajando', corregir: '🔵 Corrigiendo', espera_ok: '🟠 Esperando tu OK', hecha: '🟢 Terminó', error: '🔴 Error' }[o.estado] || o.estado;
@@ -38,8 +38,35 @@ panelAgente = async function (caja) {
   caja.append(k);
   if (L.length > 1) {
     const h = el('details'); h.append(el('summary', 'suave', 'Órdenes anteriores'));
-    L.slice(1, 8).forEach(function (x) { h.append(el('p', 'suave', x.fecha + ' · ' + x.tipo + ' · ' + x.estado)); });
+    L.filter(function (x) { return x !== o; }).slice(0, 7).forEach(function (x) { h.append(el('p', 'suave', x.fecha + ' · ' + x.tipo + ' · ' + x.estado)); });
     caja.append(h);
   }
   caja.append(boton('🔄 Actualizar', function () { panelAgente(caja); }, 'sec'));
+};
+
+/* Arrancar: sin duplicados, y lo toma el agente de la PC en menos de 1 minuto */
+arrancar = async function () {
+  let r;
+  try { r = await api('ordenes'); } catch (e) { aviso('Error: ' + e.message); return; }
+  const act = (r.ordenes || []).filter(function (x) { return ['pendiente', 'en_curso', 'aprobada', 'corregir', 'espera_ok'].indexOf(x.estado) >= 0; })[0];
+  if (act) { aviso(act.estado === 'espera_ok' ? 'Hay un plan esperando tu OK' : 'El agente ya está trabajando'); vistaPanel(); return; }
+  const dias = ddmmyyyy(0);
+  const texto = 'ARRANCAR ' + dias + '. Mirá la cola de gestión de la app (inicio) y trabajá según tus instrucciones.';
+  try { await api('ordenNueva', { tipo: 'arrancar', texto: texto }); } catch (e) { aviso('Error: ' + e.message); return; }
+  aviso('Listo. El agente de tu PC la toma en menos de 1 minuto');
+  vistaPanel();
+};
+
+/* Aprobar texto: queda guardado en el proyecto (lo hace el agente) y arranca */
+popupAprobarTexto = function (paso, nombre) {
+  const m = abrirModal('✏️ Texto del ' + PASOS[paso].nom.split(' · ')[0], null);
+  m.cuerpo.classList.add('angosto');
+  const t = campo('Texto base (el nombre se pone solo)', 'area', textoPaso(paso, nombre).split(primerNombre(nombre)).join('{n}')); t.rows = 7;
+  m.cuerpo.append(t, el('p', 'suave', 'Al aprobar, el agente lo guarda como plantilla aprobada en el proyecto y empieza a usarlo. Cada mensaje lo personaliza él.'));
+  m.cuerpo.append(boton('✅ Aprobar y empezar', async function () {
+    const g = textosGuardados(); g[paso] = t.value; guardarLocal(CLAVE_TEXTOS, g); BORRADOR[paso] = false;
+    m.cerrar();
+    try { await api('ordenNueva', { tipo: 'aprobar_plantilla', texto: 'APROBÉ la plantilla del ' + PASOS[paso].nom + ' ({n} = primer nombre):\n\n' + t.value }); aviso('Aprobada. El agente la guarda y arranca'); } catch (e) { aviso('Error: ' + e.message); }
+    vistaPanel();
+  }));
 };

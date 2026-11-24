@@ -49,8 +49,11 @@ function tourPosicionar() {
   if (!TOUR) return;
   const p = TOUR.pasos[TOUR.i], elem = p && p.sel(); if (!elem) return;
   const r = elem.getBoundingClientRect(), pad = 6;
-  const h = TOUR.hl.style;
+  const h = TOUR.hl.style, vw0 = window.innerWidth, vh0 = window.innerHeight;
   h.left = (r.left - pad) + 'px'; h.top = (r.top - pad) + 'px'; h.width = (r.width + pad * 2) + 'px'; h.height = (r.height + pad * 2) + 'px';
+  const L0 = Math.max(0, r.left - pad), T0 = Math.max(0, r.top - pad), R0 = Math.min(vw0, r.right + pad), B0 = Math.min(vh0, r.bottom + pad), D = TOUR.dim;
+  const setD = function (n, l, t, w, hh) { n.style.left = l + 'px'; n.style.top = t + 'px'; n.style.width = Math.max(0, w) + 'px'; n.style.height = Math.max(0, hh) + 'px'; };
+  setD(D[0], 0, 0, vw0, T0); setD(D[1], 0, B0, vw0, vh0 - B0); setD(D[2], 0, T0, L0, B0 - T0); setD(D[3], R0, T0, vw0 - R0, B0 - T0);
   const c = TOUR.caja, ch = c.offsetHeight || 150, vw = window.innerWidth, vh = window.innerHeight;
   const w = Math.min(340, vw - 24); c.style.width = w + 'px';
   let top = r.bottom + 14;
@@ -72,7 +75,7 @@ function iniciarTour() {
 function arrancarTour() {
   const nodos = [];
   const velo = document.createElement('div'); velo.style.cssText = 'position:fixed;inset:0;z-index:99990;background:transparent';
-  const hl = document.createElement('div'); hl.style.cssText = 'position:fixed;z-index:99991;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.72);border:2px solid #60a5fa;pointer-events:none;transition:all .25s';
+  const hl = document.createElement('div'); hl.style.cssText = 'position:fixed;z-index:99991;border-radius:12px;border:2px solid #60a5fa;pointer-events:none;transition:all .25s';
   const caja = document.createElement('div'); caja.style.cssText = 'position:fixed;z-index:99992;background:#fff;color:#111;border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.4);font:15px/1.4 system-ui,sans-serif';
   const cont = document.createElement('div'); cont.style.cssText = 'font-size:12px;color:#666;margin-bottom:4px';
   const tit = document.createElement('div'); tit.style.cssText = 'font-weight:700;font-size:17px;margin-bottom:6px';
@@ -83,10 +86,11 @@ function arrancarTour() {
   const ant = mk('Anterior', 'background:#e5e7eb;color:#111;margin-left:auto');
   const sig = mk('Siguiente', 'background:#2563eb;color:#fff');
   fila.append(saltar, ant, sig); caja.append(cont, tit, txt, fila);
-  document.body.append(velo, hl, caja); nodos.push(velo, hl, caja);
+  const dim = [0, 1, 2, 3].map(function () { const d = document.createElement('div'); d.style.cssText = 'position:fixed;z-index:99990;background:rgba(0,0,0,.75)'; return d; });
+  document.body.append(velo, ...dim, hl, caja); nodos.push(velo, ...dim, hl, caja);
   const re = function () { tourPosicionar(); };
   window.addEventListener('resize', re); window.addEventListener('scroll', re, true);
-  TOUR = { pasos: TOUR_PASOS, i: 0, dir: 1, nodos: nodos, hl: hl, caja: caja, cont: cont, tit: tit, txt: txt, ant: ant, sig: sig, re: re };
+  TOUR = { dim: dim, pasos: TOUR_PASOS, i: 0, dir: 1, nodos: nodos, hl: hl, caja: caja, cont: cont, tit: tit, txt: txt, ant: ant, sig: sig, re: re };
   saltar.onclick = tourCerrar;
   ant.onclick = function () { TOUR.dir = -1; tourMostrar(TOUR.i - 1); };
   sig.onclick = function () { TOUR.dir = 1; tourMostrar(TOUR.i + 1); };

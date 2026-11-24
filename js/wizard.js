@@ -1,6 +1,7 @@
 /* Wizard 🪄 (v27): recorrido guiado que oscurece la pantalla y resalta cada parte mientras la explica.
    REGLA: cada cambio en la app suma o corrige un paso en TOUR_PASOS. */
 const TOUR_CLAVE = 'redconar_tour_v27';
+guiaAutomatica = function () {}; /* el recorrido nuevo reemplaza las guías por pestaña */
 function tourBoton(texto) {
   return function () {
     return [].slice.call(document.querySelectorAll('#vista button')).filter(function (b) { return b.textContent.replace(/\s+/g, ' ').trim().indexOf(texto) >= 0; })[0];
@@ -8,17 +9,15 @@ function tourBoton(texto) {
 }
 const TOUR_PASOS = [
   { sel: function () { return document.querySelector('#vista .chips'); }, t: 'Resumen de hoy', d: 'Cuántos contactos tocan hoy. 🟢 verde: hasta 1 día de atraso. 🟡 amarillo: hasta 7 días. 🔴 rojo: más de 7 días. También ves las llamadas agendadas.' },
-  { sel: tourBoton('Arrancar'), t: '▶️ Arrancar', d: 'Manda al agente a trabajar: revisa WhatsApp, contacta a los contactos nuevos y arma el plan de hoy para que lo apruebes.' },
-  { sel: tourBoton('Generar tanda'), t: '🎯 Generar tanda', d: 'Arma una lista de contactos para trabajar según lo que elijas: lista, cantidad y rango de UFs.' },
+  { sel: tourBoton('Arrancar'), t: '▶️ Arrancar', d: 'El agente contacta por WhatsApp a los contactos nuevos de Clientify con la plantilla de su lista y, al terminar, te da el reporte de la semana pasada: quién respondió y quién no.' },
+  { sel: tourBoton('Generar tanda'), t: '🎯 Generar tanda', d: 'Elegís cuántos contactos sacar de cada lista y el rango de UFs. Te muestra de dónde sale cada uno antes de cargarlos.' },
   { sel: tourBoton('Captura'), t: '📷 Captura → contactos', d: 'Subís una captura de pantalla y la app la lee y la convierte en contactos para cargar.' },
   { sel: tourBoton('Cargar lista'), t: '➕ Cargar lista', d: 'Pegás una lista de contactos y quedan dados de alta y listos para la secuencia.' },
-  { sel: tourBoton('Pedido'), t: '🧠 Pedido', d: 'Escribís o dictás lo que necesitás y la app lo manda al chat de Claude que corresponde.' },
-  { sel: tourBoton('Aplicar resultado'), t: '📥 Aplicar resultado', d: 'Pegás la respuesta de Claude y la app registra todo sola.' },
-  { sel: tourBoton('Chat de Google'), t: '💬 Chat de Google', d: 'Ves y respondés tu Google Chat sin salir de la app.' },
+  { sel: tourBoton('Pedido'), t: '✍️ Pedido a Claude', d: 'Escribís o dictás lo que necesitás y la app te lleva al chat de Claude que corresponde con el prompt listo.' },
   { sel: function () { return document.querySelector('#vista section.card'); }, t: '🤖 Agente', d: 'Acá ves qué está haciendo el agente: barra de progreso, el plan para aprobar por tandas de 10 y el reporte final del día.' },
   { sel: function () { return document.querySelectorAll('#vista section.card')[1]; }, t: '📅 Agenda', d: 'Tus reuniones y llamadas de Google Calendar.' },
   { sel: function () { const c = document.querySelectorAll('#vista > div'); return c[c.length - 1]; }, t: 'A gestionar hoy', d: 'Los contactos que tocan hoy y los atrasados, con su color. Tocá uno para ver el mensaje, marcar enviado, respondió o descartar.' },
-  { sel: function () { return document.getElementById('menu'); }, t: 'Menú de abajo', d: 'Panel (esta pantalla), Contactos, Tareas, Chats de Claude y Más (ajustes).' },
+  { sel: function () { return document.getElementById('menu'); }, t: 'Menú de abajo', d: 'Panel (esta pantalla), Contactos, Tareas, Chats de Claude, Google (tu Chat de Google: ver y responder) y Más (ajustes).' },
   { sel: function () { return document.getElementById('fab'); }, t: '🎤 Micrófono', d: 'Dictás un pedido o una nota por voz desde cualquier pantalla.' },
   { sel: function () { return document.getElementById('campana'); }, t: '🔔 Avisos', d: 'Te avisa cuando entran mails o chats nuevos.' },
   { sel: function () { return document.getElementById('varita'); }, t: '🪄 Esta guía', d: 'Tocá la varita cuando quieras ver este recorrido otra vez.' }

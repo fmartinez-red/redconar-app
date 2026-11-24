@@ -2,9 +2,11 @@
 let CWS_ESP = null;
 function cwsNombre(s) { return String(s.nombre || '').split(', ').filter(function (x) { return x !== 'Facundo Martinez'; }).join(', ') || s.nombre || 'Chat'; }
 function cwsHora(f) { try { const d = new Date(f); return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
-async function abrirChatWS() {
-  const m = abrirModal('💬 Chat de Google', null);
-  const cont = el('div'); m.cuerpo.append(cont);
+function abrirChatWS() { return irA('GOOGLE'); }
+async function vistaGoogle() {
+  vista.textContent = '';
+  vista.append(titulo('🗨️ Chat de Google', 'Tus chats de Google Workspace: ves quién te escribió y respondés desde acá.'));
+  const cont = el('div'); vista.append(cont);
   async function lista() {
     cont.textContent = '';
     const q = campo('Buscar chat o persona', 'text', '');
@@ -49,12 +51,3 @@ async function abrirChatWS() {
   }
   lista();
 }
-(function () {
-  const orig = vistaPanel;
-  vistaPanel = async function () {
-    const p = orig.apply(this, arguments);
-    const g = vista.querySelector('div[style*="grid-template-columns"]');
-    if (g && !g.querySelector('.btn-chatws')) { const b = boton('💬 Chat de Google', abrirChatWS, 'sec'); b.classList.add('btn-chatws'); g.append(b); }
-    return p;
-  };
-})();

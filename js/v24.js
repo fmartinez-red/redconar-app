@@ -51,7 +51,7 @@ arrancar = async function () {
   const act = (r.ordenes || []).filter(function (x) { return ['pendiente', 'en_curso', 'aprobada', 'corregir', 'espera_ok'].indexOf(x.estado) >= 0; })[0];
   if (act) { aviso(act.estado === 'espera_ok' ? 'Hay un plan esperando tu OK' : 'El agente ya está trabajando'); vistaPanel(); return; }
   const dias = ddmmyyyy(0);
-  const texto = 'ARRANCAR ' + dias + '. Mirá la cola de gestión de la app (inicio) y trabajá según tus instrucciones.';
+  const texto = 'ARRANCAR ' + dias + '. Contactá a los contactos NUEVOS de Clientify que no tengan ninguna contactación, con la plantilla básica de su lista de origen, y registrá cada envío. Al terminar, hacé el REPORTE de la semana pasada: quién respondió y quién no.';
   try { await api('ordenNueva', { tipo: 'arrancar', texto: texto }); } catch (e) { aviso('Error: ' + e.message); return; }
   aviso('Listo. El agente de tu PC la toma en menos de 1 minuto');
   vistaPanel();

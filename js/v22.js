@@ -78,39 +78,44 @@ async function cargarLineas(lineas, nomLista, conBase) {
 async function popupTanda() {
   const m = abrirModal('🎯 Generar tanda', null);
   m.cuerpo.classList.add('angosto');
-  const cant = campo('Cantidad de contactos', 'number', '40');
+  m.cuerpo.append(el('p', 'suave', 'Qué toma la app: contactos de tu base con teléfono, sin gestión previa, que no sean clientes ni descartados. Primero los que están en el rango de UFs, después los que no tienen dato de UFs. Vos decidís cuántos sacar de cada lista (dejá vacío o 0 para no usar esa lista).'));
   const umin = campo('UFs mínimo', 'number', '200'), umax = campo('UFs máximo', 'number', '1000');
-  let fuentes = [['', 'Todas las listas']];
-  try { const r = await api('bases'); fuentes = fuentes.concat(r.fuentes.slice(0, 60).map(function (f) { return [f[0], f[0].replace(/_/g, ' ') + ' (' + f[1] + ')']; })); } catch (e) { /* queda Todas */ }
-  const fu = lista(fuentes);
+  let fuentes = [];
+  try { const r = await api('bases'); fuentes = r.fuentes.slice(0, 40); } catch (e) { m.cuerpo.append(el('p', null, 'No se pudieron leer las listas: ' + e.message)); return; }
+  m.cuerpo.append(umin, umax, el('strong', null, 'Cantidad por lista'));
+  const filas = fuentes.map(function (f) {
+    const c = campo(f[0].replace(/_/g, ' ') + ' (' + f[1] + ' contactos en la lista)', 'number', ''); c.min = 0; m.cuerpo.append(c); return { f: f[0], c: c };
+  });
   const prev = el('div');
   let elegidos = [];
-  m.cuerpo.append(el('p', 'suave', 'La app elige de tu base los contactos con teléfono, no trabajados, priorizando el rango de UFs.'), fu, cant, umin, umax);
   m.cuerpo.append(boton('Armar tanda', async function () {
+    const pedidas = filas.filter(function (x) { return Number(x.c.value) > 0; });
+    if (!pedidas.length) { aviso('Poné una cantidad en al menos una lista'); return; }
     prev.textContent = 'Buscando...';
-    const r = await api('lista', { fuente: fu.value });
     const lo = Number(umin.value) || 0, hi = Number(umax.value) || 1e9;
     const ufDe = function (c) { const n = parseInt(String(c.ufSistema || '').replace(/\D/g, ''), 10); return isNaN(n) ? null : n; };
-    const ok = (r.items || []).filter(function (c) { return waNumero(c.telefono) && !c.gest && !/descart|stand|cliente|perdid/i.test((c.estado || '') + ' ' + (c.tipo || '')); });
-    const dentro = ok.filter(function (c) { const u = ufDe(c); return u !== null && u >= lo && u <= hi; });
-    const sinDato = ok.filter(function (c) { return ufDe(c) === null; });
-    elegidos = dentro.concat(sinDato).slice(0, Number(cant.value) || 40);
+    const usados = {}; elegidos = [];
     prev.textContent = '';
-    prev.append(el('p', null, elegidos.length + ' contactos (' + Math.min(dentro.length, elegidos.length) + ' en rango de UFs, el resto sin dato de UFs).'));
-    elegidos.slice(0, 15).forEach(function (c) { prev.append(el('p', 'suave', '• ' + [c.nombre, c.apellido].filter(Boolean).join(' ') + (c.empresa ? ' · ' + c.empresa : '') + (c.ufSistema ? ' · ' + c.ufSistema + ' UF' : ''))); });
+    for (const x of pedidas) {
+      const r = await api('lista', { fuente: x.f });
+      const ok = (r.items || []).filter(function (c) { const k = waNumero(c.telefono); return k && !usados[k] && !c.gest && !/descart|stand|cliente|perdid/i.test((c.estado || '') + ' ' + (c.tipo || '')); });
+      const dentro = ok.filter(function (c) { const u = ufDe(c); return u !== null && u >= lo && u <= hi; });
+      const sinDato = ok.filter(function (c) { return ufDe(c) === null; });
+      const sel = dentro.concat(sinDato).slice(0, Number(x.c.value));
+      sel.forEach(function (c) { usados[waNumero(c.telefono)] = 1; c._f = x.f; });
+      elegidos = elegidos.concat(sel);
+      prev.append(el('p', null, x.f.replace(/_/g, ' ') + ': ' + sel.length + ' de ' + x.c.value + ' pedidos (' + Math.min(dentro.length, sel.length) + ' en rango de UFs, ' + Math.max(0, sel.length - dentro.length) + ' sin dato de UFs; disponibles ' + ok.length + ')'));
+    }
+    prev.append(el('strong', null, 'Total: ' + elegidos.length + ' contactos'));
+    elegidos.slice(0, 15).forEach(function (c) { prev.append(el('p', 'suave', '• ' + [c.nombre, c.apellido].filter(Boolean).join(' ') + (c.empresa ? ' · ' + c.empresa : '') + (c.ufSistema ? ' · ' + c.ufSistema + ' UF' : '') + ' · ' + c._f.replace(/_/g, ' '))); });
     if (elegidos.length > 15) prev.append(el('p', 'suave', '... y ' + (elegidos.length - 15) + ' más'));
     if (elegidos.length) {
       prev.append(boton('✅ Cargar a la secuencia', async function () {
-        for (const c of elegidos) await registrar({ nombre: [c.nombre, c.apellido].filter(Boolean).join(' '), empresa: c.empresa, telefono: c.telefono, tipo: fu.value || 'Tanda' }, { proximo: etiquetaPaso(1), fecha: fechaHabil(0) });
+        for (const c of elegidos) await registrar({ nombre: [c.nombre, c.apellido].filter(Boolean).join(' '), empresa: c.empresa, telefono: c.telefono, tipo: c._f || 'Tanda' }, { proximo: etiquetaPaso(1), fecha: fechaHabil(0) });
         aviso(elegidos.length + ' cargados'); m.cerrar(); vistaPanel();
       }));
     }
   }, 'sec'), prev);
-  m.cuerpo.append(el('p', 'suave', '— o —'));
-  m.cuerpo.append(boton('📋 Cargar lista piloto 16-17/11 (' + PILOTO.length + ')', async function () {
-    if (leerLocal('redconar_piloto', false) && !confirm('Ya la cargaste. ¿Cargar de nuevo (duplica registros)?')) return;
-    await cargarPiloto(function () { m.cerrar(); vistaPanel(); });
-  }, 'sec'));
 }
 
 /* ---------- captura de pantalla a contactos (OCR en el celular) ---------- */
@@ -253,7 +258,7 @@ vistaPanel = async function () {
   const barra = el('div'); barra.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0';
   barra.append(boton('▶️ Arrancar', function () { arrancar(); }), boton('🎯 Generar tanda', popupTanda, 'sec'),
     boton('📷 Captura → contactos', popupCaptura, 'sec'), boton('➕ Cargar lista', popupCargarLista, 'sec'),
-    boton('🧠 Pedido', function () { popupCaja(); }, 'sec'), boton('📥 Aplicar resultado', function () { popupAplicar(); }, 'sec'));
+    boton('✍️ Pedido a Claude', function () { popupCaja(); }, 'sec'));
   vista.append(barra);
   const ag = el('section', 'card'); vista.append(ag);
   const agenda = el('section', 'card'); vista.append(agenda);

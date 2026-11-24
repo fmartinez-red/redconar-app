@@ -1,6 +1,6 @@
 /* Arranque, navegación y pantallas: PANEL, CONTACTOS, TAREAS, CHATS, MÁS. Va último: redefine lo anterior. */
-const VERSION_APP = 'v26'; // subir junto con VERSION en sw.js
-const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['MÁS', '⚙️']];
+const VERSION_APP = 'v27'; // subir junto con VERSION en sw.js
+const MENU = [['PANEL', '🏠'], ['CONTACTOS', '👥'], ['TAREAS', '✅'], ['CHATS', '💬'], ['GOOGLE', '🗨️'], ['MÁS', '⚙️']];
 const ESTADO = { seccion: 'PANEL', tareas: '' };
 const CLAVE_WIZARD = 'redconar_wizard_visto';
 const CLAVE_ULTIMA = 'redconar_ultima'; // para que al recargar vuelva a la misma pantalla
@@ -12,7 +12,7 @@ function irA(nombre) {
   recordar();
   Array.prototype.forEach.call(menu.children, function (b) { b.classList.toggle('activo', b.dataset.sec === nombre); });
   window.scrollTo(0, 0);
-  const f = nombre === 'PANEL' ? vistaPanel() : nombre === 'CONTACTOS' ? vistaBuscar() : nombre === 'TAREAS' ? vistaTareas() : nombre === 'CHATS' ? vistaChats() : vistaAjustes();
+  const f = nombre === 'PANEL' ? vistaPanel() : nombre === 'CONTACTOS' ? vistaBuscar() : nombre === 'TAREAS' ? vistaTareas() : nombre === 'CHATS' ? vistaChats() : nombre === 'GOOGLE' ? vistaGoogle() : vistaAjustes();
   Promise.resolve(f).then(function () { guiaAutomatica(nombre); });
   return f;
 }
